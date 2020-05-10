@@ -19,7 +19,7 @@ export interface ArticleApiData {
   description: string;
   url: string;
   urlToImage?: string | null;
-  publishedAt: ISOFormattedTime;
+  publishedAt: Date;
   content: string | null;
 }
 

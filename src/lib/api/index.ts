@@ -5,7 +5,6 @@ import axios, { AxiosResponse } from 'axios';
 import { extractContentFromUrl } from '../../parser';
 import ArticleSource from '../models/ArticleSource';
 import Config from '../../config';
-import Cache from '../../cache';
 
 import {
   ApiRequest,
@@ -17,10 +16,6 @@ import {
   NewsApiSourcesRequest,
   NewsApiSourcesResponse,
 } from '../../typings';
-
-export const articlesCache = new Cache<ArticleApiData>({
-  maxSize: 5000,
-});
 
 const { log } = console;
 
@@ -42,18 +37,14 @@ const queryApi = (
 
 const populateEmptyContent = (
   articles: ArticleApiData[]
-): Promise<ArticleApiData[]> => {
-  const promises = articles.map(async (data: ArticleApiData) => {
-    if (data.content === null)
-      data.content = await extractContentFromUrl(data.url);
+): Promise<ArticleApiData[]> =>
+  Promise.all(
+    articles.map(async (data: ArticleApiData) => {
+      if (!data.content) data.content = await extractContentFromUrl(data.url);
 
-    articlesCache.set(data.url, data);
-
-    return { ...data };
-  });
-
-  return Promise.all(promises);
-};
+      return { ...data };
+    })
+  );
 
 /**
  * Provides live top and breaking headlines for a country,
@@ -79,7 +70,6 @@ export const everything = async (
     '/everything',
     params
   );
-
   const articles = await populateEmptyContent(data.articles);
 
   return { ...data, articles };

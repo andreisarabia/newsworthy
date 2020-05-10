@@ -8,7 +8,7 @@ import * as db from './database';
 import Config from './config';
 import { timestamp } from './util/time';
 
-class Application {
+export default class Application {
   private static readonly singleton = new Application();
 
   private readonly port = Config.get('port');
@@ -18,15 +18,21 @@ class Application {
   private pathMap = new Map<string, string[]>();
   private koa = new Koa();
 
-  private attachMiddlewares() {
+  private constructor() {
     this.koa.keys = ['__newsworthy_app'];
+  }
 
+  private attachMiddlewares() {
     this.koa
       .use(koaBody())
       .use(koaSession(this.sessionConfig, this.koa))
-      // .use(sessionLogger())
+      .use(sessionLogger())
       .use(apiRouter.routes())
       .use(apiRouter.allowedMethods());
+
+    apiRouter.stack.forEach(({ path, methods }) => {
+      this.pathMap.set(path, methods);
+    });
   }
 
   public async setup(): Promise<this> {
@@ -38,10 +44,6 @@ class Application {
   }
 
   public start(): void {
-    apiRouter.stack.forEach(({ path, methods }) => {
-      this.pathMap.set(path, methods);
-    });
-
     this.koa.listen(this.port, () => {
       console.log(`[${timestamp()}] Listening on ${this.port}`);
       console.log(`[${timestamp()}] API Paths: `, this.pathMap);
@@ -52,5 +54,3 @@ class Application {
     return this.singleton;
   }
 }
-
-export default Application;

@@ -25,7 +25,7 @@ const logRequest = (ctx: Koa.ParameterizedContext, xResponseTime: string) => {
   const { ip, method, path, status } = ctx;
   const { 'user-agent': ua, referer = '' } = ctx.header;
 
-  let logMsg = `${ip} - - [${isoTimestamp()}] ${method} ${path} ${status} ${xResponseTime}`;
+  let logMsg = `${ip} - [${isoTimestamp()}] ${method} ${path} ${status} ${xResponseTime}`;
   if (referer) logMsg += ` ${referer}`;
   logMsg += ` ${ua}`;
 

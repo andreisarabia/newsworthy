@@ -2,10 +2,15 @@ type CacheOptions = {
   maxSize: number;
 };
 
-export default class Cache<T> {
+export default class Cache<T extends { [key: string]: any }> {
   private keyValueMap = new Map<string, T>();
+  private lastAddedToCache: Date = new Date();
 
   public constructor(private options: CacheOptions = { maxSize: 50 }) {}
+
+  private updateLastAddedToCache() {
+    this.lastAddedToCache = new Date();
+  }
 
   private checkCache() {
     if (this.keyValueMap.size > this.options.maxSize)
@@ -29,10 +34,20 @@ export default class Cache<T> {
 
   public set(key: string, value: T): this {
     this.checkCache();
-
     this.keyValueMap.set(key, value);
+    this.updateLastAddedToCache();
 
     return this;
+  }
+
+  public setAll(commonKey: string, values: T[]) {
+    this.checkCache();
+
+    values.forEach(value => {
+      this.keyValueMap.set(value[commonKey], value);
+    });
+
+    this.updateLastAddedToCache();
   }
 
   public has(key: string): boolean {

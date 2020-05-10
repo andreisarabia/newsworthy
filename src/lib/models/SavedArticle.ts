@@ -2,7 +2,7 @@ import axios from 'axios';
 import { FindOneOptions } from 'mongodb';
 
 import * as db from '../../database';
-import { articlesCache } from '../api';
+import { articlesCache } from '../routes/api';
 import { toUniqueArray } from '../../util/fns';
 import { extractUrlData } from '../../parser';
 import {
