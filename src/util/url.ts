@@ -45,7 +45,7 @@ export const extractPublishedTime = (html: string): Date | null => {
         return new Date(tag.content);
       case 'article:modified_time':
         backupPublishedTime = new Date(tag.content);
-        break;
+        continue;
     }
   }
 

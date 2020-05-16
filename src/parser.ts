@@ -30,11 +30,12 @@ export const extractContentFromUrl = async (url: string): Promise<string> => {
 export const extractUrlData = async (
   url: string
 ): Promise<NewsArticleProps> => {
-  const cleanedUrl = cleanUrl(url);
-  const { data: dirtyHtml } = await axios.get(cleanedUrl);
+  url = cleanUrl(url);
+
+  const { data: dirtyHtml } = await axios.get(url);
   const html = sanitizeHtml(dirtyHtml, { ADD_TAGS: ['link'] });
   const [parseResult, articleSrc] = await Promise.all([
-    Mercury.parse(cleanedUrl, { html: Buffer.from(html, 'utf-8') }),
+    Mercury.parse(url, { html: Buffer.from(html, 'utf-8') }),
     ArticleSource.findOne({ url: new URL(url).origin }),
   ]);
 
@@ -51,15 +52,15 @@ export const extractUrlData = async (
   return {
     source,
     content,
-    author: rest.author || extractAuthor(html) || '',
-    title: rest.title || extractTitle(html) || cleanedUrl,
     description,
-    url: cleanedUrl,
-    urlToImage: rest.lead_image_url,
     publishedAt,
-    domain: extractDomain(cleanedUrl),
-    canonicalUrl: extractCanonicalUrl(html) || cleanedUrl,
-    slug: extractSlug(cleanedUrl),
+    url,
+    urlToImage: rest.lead_image_url,
+    author: rest.author || extractAuthor(html) || '',
+    title: rest.title || extractTitle(html) || url,
+    domain: extractDomain(url),
+    canonicalUrl: extractCanonicalUrl(html) || url,
+    slug: extractSlug(url),
     sizeInBytes: Buffer.byteLength(content || ''),
     createdAt: new Date(),
     tags: [],
