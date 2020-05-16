@@ -1,3 +1,5 @@
+import { ObjectId } from 'mongodb';
+
 type ISOFormattedTime = string;
 
 type NewsCategory =
@@ -9,6 +11,10 @@ type NewsCategory =
   | 'sports'
   | 'technology';
 
+interface MongoModelProps {
+  _id?: ObjectId;
+}
+
 export interface ArticleApiData {
   source: {
     id: string | null;
@@ -19,11 +25,11 @@ export interface ArticleApiData {
   description: string;
   url: string;
   urlToImage?: string | null;
-  publishedAt: ISOFormattedTime;
+  publishedAt: Date;
   content: string | null;
 }
 
-export interface NewsArticleProps extends ArticleApiData {
+export interface NewsArticleProps extends MongoModelProps, ArticleApiData {
   domain: string;
   canonicalUrl: string;
   slug: string;
@@ -32,7 +38,7 @@ export interface NewsArticleProps extends ArticleApiData {
   tags: string[];
 }
 
-export interface ArticleSourceProps {
+export interface ArticleSourceProps extends MongoModelProps {
   id: string;
   name: string;
   description: string;

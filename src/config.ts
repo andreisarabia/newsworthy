@@ -4,7 +4,7 @@ type ConfigFile = {
   newsApiKey: string;
   mongoUri: string;
   port?: number;
-  env: string;
+  env: 'dev' | 'prod';
 };
 
 export default class Config {

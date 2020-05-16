@@ -9,16 +9,18 @@ const collectionName = 'article_sources';
 export default class ArticleSource {
   private constructor(private props: ArticleSourceProps) {}
 
-  private get data() {
-    return { ...this.props };
-  }
-
   private get url() {
     return this.props.url;
   }
 
   public get id() {
     return this.props.id;
+  }
+
+  public get data() {
+    const { _id, ...publicData } = this.props;
+
+    return Object.freeze(publicData);
   }
 
   public get name() {
@@ -58,5 +60,15 @@ export default class ArticleSource {
     sources: ArticleSourceProps[]
   ): Promise<ArticleSource[]> {
     return Promise.all(sources.map(source => new ArticleSource(source).save()));
+  }
+
+  public static async dropCollection() {
+    try {
+      await db.getCollection(collectionName).drop();
+
+      return true;
+    } catch {
+      return false;
+    }
   }
 }

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { FindOneOptions } from 'mongodb';
 
 import * as db from '../../database';
-import { articlesCache } from '../api';
+import { articlesCache } from '../routes/api';
 import { toUniqueArray } from '../../util/fns';
 import { extractUrlData } from '../../parser';
 import {
@@ -28,12 +28,14 @@ export default class SavedArticle {
   }
 
   public get data() {
-    return { ...this.props };
+    const { _id, ...publicData } = this.props;
+
+    return Object.freeze(publicData);
   }
 
   public addTags(tags: string[]): this {
     this.props.tags = toUniqueArray([
-      ...this.tags,
+      ...this.props.tags,
       ...tags.map(str => str.trim()),
     ]).sort();
 
@@ -69,11 +71,9 @@ export default class SavedArticle {
     return results.map(data => new SavedArticle(data));
   }
 
-  public static saveArticles(urls: string | string[]): Promise<SavedArticle[]> {
-    urls = Array.isArray(urls) ? toUniqueArray(urls) : [urls];
-
+  public static saveArticles(urls: string[]): Promise<SavedArticle[]> {
     return Promise.all(
-      urls.map(async url => {
+      toUniqueArray(urls).map(async url => {
         const articleData = await this.parseData(url);
 
         return new SavedArticle(articleData).save();
@@ -96,5 +96,15 @@ export default class SavedArticle {
       createdAt: new Date(),
       tags: [],
     };
+  }
+
+  public static async dropCollection() {
+    try {
+      await db.getCollection(collectionName).drop();
+
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
