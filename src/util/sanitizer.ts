@@ -1,9 +1,6 @@
-import createPurify from 'dompurify';
+import dompurify from 'dompurify';
 import { JSDOM } from 'jsdom';
 
-const DEFAULT_PURIFY_CONFIG = { WHOLE_DOCUMENT: true };
-const EXTRA_WHITESPACE_REGEX = /\s\s+/g;
-const localPurifier = createPurify(<any>new JSDOM('').window);
 const htmlEntities = new Map([
   ['&', '&amp;'],
   ['<', '&lt;'],
@@ -12,9 +9,15 @@ const htmlEntities = new Map([
   ["'", '&#x27;'],
   ['/', '&#x2F;'],
 ]);
+const defaultPurifyConfig: dompurify.Config = {
+  WHOLE_DOCUMENT: true,
+  FORBID_TAGS: ['style', 'script'],
+  FORBID_ATTR: ['style'],
+};
 
-const removeExtraWhitespace = (str: string) =>
-  str.replace(EXTRA_WHITESPACE_REGEX, '');
+const localSanitizer = dompurify(<any>new JSDOM('').window);
+
+const removeExtraWhitespace = (str: string) => str.replace(/\s\s+/, '');
 
 const escapeHtml = (html: string): string => {
   let escaped = '';
@@ -28,10 +31,10 @@ const escapeHtml = (html: string): string => {
 
 export const sanitizeHtml = (
   html: string,
-  options: createPurify.Config = {}
+  options: dompurify.Config = {}
 ): string => {
   html = escapeHtml(removeExtraWhitespace(html));
-  options = { ...DEFAULT_PURIFY_CONFIG, ...options };
+  options = { ...defaultPurifyConfig, ...options };
 
-  return localPurifier.sanitize(html, options) as string;
+  return localSanitizer.sanitize(html, options) as string;
 };

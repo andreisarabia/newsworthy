@@ -11,13 +11,13 @@ import {
   extractSlug,
 } from '../../util/url';
 
-import { NewsArticleProps } from '../../typings';
+import * as types from '../../typings';
 
 const collectionName = 'saved_articles';
 const { log } = console;
 
 export default class SavedArticle {
-  private constructor(private props: NewsArticleProps) {}
+  private constructor(private props: types.NewsArticleProps) {}
 
   private get url() {
     return this.props.url;
@@ -51,7 +51,7 @@ export default class SavedArticle {
   }
 
   public static async findOne(
-    criteria: Partial<NewsArticleProps>
+    criteria: Partial<types.NewsArticleProps>
   ): Promise<SavedArticle | null> {
     const articleData = await db
       .getCollection(collectionName)
@@ -81,7 +81,7 @@ export default class SavedArticle {
     );
   }
 
-  private static async parseData(url: string): Promise<NewsArticleProps> {
+  private static async parseData(url: string): Promise<types.NewsArticleProps> {
     if (!articlesCache.has(url)) return extractUrlData(url);
 
     const savedApiArticle = articlesCache.get(url)!;

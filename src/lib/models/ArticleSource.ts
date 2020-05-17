@@ -2,12 +2,12 @@ import { FindOneOptions } from 'mongodb';
 
 import * as db from '../../database';
 
-import { ArticleSourceProps } from '../../typings';
+import * as types from '../../typings';
 
 const collectionName = 'article_sources';
 
 export default class ArticleSource {
-  private constructor(private props: ArticleSourceProps) {}
+  private constructor(private props: types.ArticleSourceProps) {}
 
   private get url() {
     return this.props.url;
@@ -36,7 +36,7 @@ export default class ArticleSource {
   }
 
   public static async findOne(
-    criteria: Partial<ArticleSourceProps>
+    criteria: Partial<types.ArticleSourceProps>
   ): Promise<ArticleSource | null> {
     const sourcesData = await db
       .getCollection(collectionName)
@@ -57,7 +57,7 @@ export default class ArticleSource {
   }
 
   public static saveSources(
-    sources: ArticleSourceProps[]
+    sources: types.ArticleSourceProps[]
   ): Promise<ArticleSource[]> {
     return Promise.all(sources.map(source => new ArticleSource(source).save()));
   }

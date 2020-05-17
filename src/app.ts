@@ -17,17 +17,15 @@ type ContentSecurityPolicy = {
 };
 
 const IS_DEV = Config.get('env') === 'dev';
+const ONE_DAY_IN_MS = 60 * 60 * 24 * 1000;
 
 export default class Application {
   private static readonly singleton = new Application();
 
   private readonly port = Config.get('port');
-  private readonly sessionConfig = {
-    httpOnly: true,
-  };
   private readonly csp: ContentSecurityPolicy = {
     'default-src': ['self', 'https://fonts.gstatic.com'],
-    'script-src': ['self', 'unsafe-inline'],
+    'script-src': ['self', 'unsafe-inline', 'unsafe-eval'],
     'style-src': [
       'self',
       'unsafe-inline',
@@ -59,28 +57,35 @@ export default class Application {
     return header;
   }
 
-  private defaultHeaderMiddleware() {
+  private attachMiddlewares() {
+    const sessionConfig = {
+      key: '__app',
+      maxAge: ONE_DAY_IN_MS,
+      overwrite: true,
+      signed: true,
+      httpOnly: true,
+      autoCommit: false,
+    };
     const defaultHeaders = {
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'deny',
       'X-XSS-Protection': '1; mode=block',
     };
 
-    return async (ctx: Koa.ParameterizedContext, next: Koa.Next) => {
-      ctx.set(defaultHeaders);
-
-      await next();
-    };
-  }
-
-  private attachMiddlewares() {
     this.koa
+      .use(koaSession(sessionConfig, this.koa))
       .use(koaBody())
-      .use(koaSession(this.sessionConfig, this.koa))
-      .use(this.defaultHeaderMiddleware())
+      .use(async (ctx, next) => {
+        ctx.set(defaultHeaders);
+        await next();
+      })
       .use(sessionLogger())
       .use(apiRouter.routes())
-      .use(apiRouter.allowedMethods());
+      .use(apiRouter.allowedMethods())
+      .on('error', (err, ctx) => {
+        const msg = err instanceof Error ? err.stack : err;
+        console.error(msg, timestamp(), `URL: ${ctx.url}`);
+      });
 
     this.attachNuxtMiddleware();
 

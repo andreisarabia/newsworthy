@@ -34,6 +34,8 @@ export default () => async (ctx: Koa.ParameterizedContext, next: Koa.Next) => {
   try {
     if (isNextFile(path)) return await next(); // handled by Next
 
+    await ctx.session.manuallyCommit();
+
     if (!path.startsWith('/api'))
       ctx.session.views = ctx.session.views + 1 || 1; // count non-API calls as a `view`
 

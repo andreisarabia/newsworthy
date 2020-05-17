@@ -8,24 +8,19 @@ import Cache from '../../cache';
 import Config from '../../config';
 import { isUrl } from '../../util/url';
 
-import {
-  NewsApiHeadlineRequest,
-  NewsApiEverythingRequest,
-  NewsApiSourcesRequest,
-  ArticleApiData,
-} from '../../typings';
+import * as types from '../../typings';
 
 const IS_DEV = Config.get('env') === 'dev';
 const { log } = console;
 
-export const articlesCache = new Cache<ArticleApiData>({
+export const articlesCache = new Cache<types.ArticleApiData>({
   maxSize: 5000,
 });
 
 const defaultHeadlineParams = { country: 'us' };
 
 const sendTopHeadlines = async (ctx: Koa.ParameterizedContext) => {
-  const params: NewsApiHeadlineRequest = ctx.request.body;
+  const params: types.NewsApiHeadlineRequest = ctx.request.body;
   const data = await newsApi.topHeadlines({
     ...defaultHeadlineParams,
     ...params,
@@ -37,9 +32,8 @@ const sendTopHeadlines = async (ctx: Koa.ParameterizedContext) => {
 };
 
 const sendEverything = async (ctx: Koa.ParameterizedContext) => {
-  const data = await newsApi.everything(
-    ctx.request.body as NewsApiEverythingRequest
-  );
+  const params: types.NewsApiEverythingRequest = ctx.request.body;
+  const data = await newsApi.everything(params);
 
   articlesCache.setAll('url', data.articles);
 
@@ -47,7 +41,8 @@ const sendEverything = async (ctx: Koa.ParameterizedContext) => {
 };
 
 const sendSources = async (ctx: Koa.ParameterizedContext) => {
-  const data = await newsApi.sources(ctx.request.body as NewsApiSourcesRequest);
+  const params: types.NewsApiSourcesRequest = ctx.request.body;
+  const data = await newsApi.sources(params);
 
   ctx.body = { data };
 };
@@ -62,8 +57,9 @@ const saveArticles = async (ctx: Koa.ParameterizedContext) => {
   );
 
   const savedArticles = await SavedArticle.saveArticles(urls);
+  const articles = savedArticles.map(article => article.data);
 
-  ctx.body = { articles: savedArticles.map(article => article.data) };
+  ctx.body = { count: articles.length, articles };
 };
 
 const addTagsToArticle = async (ctx: Koa.ParameterizedContext) => {
@@ -91,15 +87,17 @@ const findArticles = async (ctx: Koa.ParameterizedContext) => {
   if (!page || !Number.isInteger(+page)) skip = 0;
   else skip = +page * limit;
 
-  const articles = await SavedArticle.findAll({ limit, skip });
+  const savedArticles = await SavedArticle.findAll({ limit, skip });
+  const articles = savedArticles.map(article => article.data);
 
-  ctx.body = { articles: articles.map(article => article.data) };
+  ctx.body = { count: articles.length, articles };
 };
 
 const sendArticleSources = async (ctx: Koa.ParameterizedContext) => {
-  const sources = await ArticleSource.findAll();
+  const savedSources = await ArticleSource.findAll();
+  const sources = savedSources.map(source => source.data);
 
-  ctx.body = { sources: sources.map(source => source) };
+  ctx.body = { count: sources.length, sources };
 };
 
 export default new KoaRouter({ prefix: '/api/article' })
@@ -111,6 +109,8 @@ export default new KoaRouter({ prefix: '/api/article' })
   .get('/list', findArticles)
   .get('/sources', sendArticleSources)
   .get('/reset-all', async ctx => {
+    ctx.throw(500, new Error('Forbidden URL.'));
+
     if (!IS_DEV) ctx.throw(500, new Error('Forbidden URL.'));
 
     await Promise.all([
