@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from 'http';
+import http from 'http';
 
 import Koa from 'koa';
 import koaBody from 'koa-bodyparser';
@@ -9,7 +9,7 @@ import sessionLogger from './lib/middlewares/sessionLogger';
 import apiRouter from './lib/routes/api';
 import * as db from './database';
 import Config from './config';
-import { timestamp } from './util/time';
+import { timestamp, isoTimestamp } from './util/time';
 import { isUrl } from './util/url';
 
 type ContentSecurityPolicy = {
@@ -83,8 +83,11 @@ export default class Application {
       .use(apiRouter.routes())
       .use(apiRouter.allowedMethods())
       .on('error', (err, ctx) => {
-        const msg = err instanceof Error ? err.stack : err;
-        console.error(msg, timestamp(), `URL: ${ctx.url}`);
+        console.error({
+          url: ctx.url,
+          at: isoTimestamp(),
+          error: err instanceof Error ? err.stack || err.message : err,
+        });
       });
 
     this.attachNuxtMiddleware();
@@ -96,8 +99,8 @@ export default class Application {
 
   private attachNuxtMiddleware() {
     const clientAppHandler: (
-      req: IncomingMessage,
-      res: ServerResponse
+      req: http.IncomingMessage,
+      res: http.ServerResponse
     ) => Promise<void> = this.clientApp.getRequestHandler();
     const defaultNextHeaders = { 'Content-Security-Policy': this.cspHeader };
 
@@ -119,8 +122,12 @@ export default class Application {
 
   public start(): void {
     this.koa.listen(this.port, () => {
-      console.log(`[${timestamp()}] Listening on ${this.port}`);
-      console.log(`[${timestamp()}] API Paths: `, this.pathMap);
+      console.log(
+        `[${timestamp()}]`,
+        `\nListening on port ${this.port}...\n`,
+        'API Paths: ',
+        this.pathMap
+      );
     });
   }
 

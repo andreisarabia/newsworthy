@@ -4,6 +4,7 @@ import { FindOneOptions } from 'mongodb';
 import * as db from '../../database';
 import { articlesCache } from '../routes/api';
 import { toUniqueArray } from '../../util/fns';
+import { normalizeUrl } from '../../util/url';
 import { extractUrlData } from '../../parser';
 import {
   extractCanonicalUrl,
@@ -61,19 +62,20 @@ export default class SavedArticle {
   }
 
   public static async findAll(
+    criteria: Partial<types.NewsArticleProps>,
     options: FindOneOptions = { limit: 100 }
   ): Promise<SavedArticle[]> {
     const results = await db
       .getCollection(collectionName)
-      .find({}, options)
+      .find(criteria, options)
       .toArray();
 
     return results.map(data => new SavedArticle(data));
   }
 
-  public static saveArticles(urls: string[]): Promise<SavedArticle[]> {
+  public static saveAll(urls: string[]): Promise<SavedArticle[]> {
     return Promise.all(
-      toUniqueArray(urls).map(async url => {
+      toUniqueArray(urls.map(normalizeUrl)).map(async url => {
         const articleData = await this.parseData(url);
 
         return new SavedArticle(articleData).save();

@@ -7,6 +7,7 @@ import * as newsApi from '../api';
 import Cache from '../../cache';
 import Config from '../../config';
 import { isUrl } from '../../util/url';
+import { isAlphanumeric } from '../../util/is';
 
 import * as types from '../../typings';
 
@@ -56,14 +57,24 @@ const saveArticles = async (ctx: Koa.ParameterizedContext) => {
     'A provided article link is not valid. Please check your entries.'
   );
 
-  const savedArticles = await SavedArticle.saveArticles(urls);
+  const savedArticles = await SavedArticle.saveAll(urls);
   const articles = savedArticles.map(article => article.data);
 
   ctx.body = { count: articles.length, articles };
 };
 
 const addTagsToArticle = async (ctx: Koa.ParameterizedContext) => {
-  const { url, tags } = ctx.request.body as { url: string; tags: string[] };
+  const { url = '', tags = [] } = ctx.request.body as {
+    url: string;
+    tags: string[];
+  };
+
+  ctx.assert(isUrl(url), 400, 'The provided url is invalid.');
+  ctx.assert(
+    Array.isArray(tags) && tags.every(isAlphanumeric),
+    400,
+    'Some tags provided were invalid. Please check all are alphanumeric.'
+  );
 
   const article = (await SavedArticle.findOne({ url }))!;
 
@@ -87,7 +98,7 @@ const findArticles = async (ctx: Koa.ParameterizedContext) => {
   if (!page || !Number.isInteger(+page)) skip = 0;
   else skip = +page * limit;
 
-  const savedArticles = await SavedArticle.findAll({ limit, skip });
+  const savedArticles = await SavedArticle.findAll({}, { limit, skip });
   const articles = savedArticles.map(article => article.data);
 
   ctx.body = { count: articles.length, articles };

@@ -6,7 +6,7 @@ import striptags from 'striptags';
 import ArticleSource from './lib/models/ArticleSource';
 import { sanitizeHtml } from './util/sanitizer';
 import {
-  cleanUrl,
+  normalizeUrl,
   extractAuthor,
   extractCanonicalUrl,
   extractDomain,
@@ -14,14 +14,16 @@ import {
   extractTitle,
   extractPublishedTime,
 } from './util/url';
+import { properCase } from './util/words';
 
 import * as types from './typings';
 
 export const extractContentFromUrl = async (url: string): Promise<string> => {
-  const cleanedUrl = cleanUrl(url);
-  const { data: dirtyHtml }: { data: string } = await axios.get(cleanedUrl);
+  url = normalizeUrl(url);
+
+  const { data: dirtyHtml }: { data: string } = await axios.get(url);
   const html = sanitizeHtml(dirtyHtml, { ADD_TAGS: ['link'] });
-  const parsed: ParseResult = await Mercury.parse(cleanedUrl, {
+  const parsed: ParseResult = await Mercury.parse(url, {
     html: Buffer.from(html, 'utf-8'),
   });
 
@@ -38,7 +40,7 @@ const extractDescription = (html: string): string => {
 export const extractUrlData = async (
   url: string
 ): Promise<types.NewsArticleProps> => {
-  url = cleanUrl(url);
+  url = normalizeUrl(url);
 
   const { data: dirtyHtml } = await axios.get(url);
   const html = sanitizeHtml(dirtyHtml, { ADD_TAGS: ['link', 'title'] });
@@ -51,6 +53,7 @@ export const extractUrlData = async (
   const source = articleSrc
     ? { id: articleSrc.id, name: articleSrc.name }
     : { id: '', name: '' };
+  const description = rest.excerpt || extractDescription(content || '');
   const publishedAt = date_published
     ? new Date(date_published)
     : extractPublishedTime(html) || new Date();
@@ -61,8 +64,8 @@ export const extractUrlData = async (
     publishedAt,
     url,
     urlToImage: rest.lead_image_url,
-    description: rest.excerpt || extractDescription(content || ''),
-    author: extractAuthor(html) || rest.author || '',
+    description: `${description.trim()}...`,
+    author: properCase(extractAuthor(html) || rest.author || ''),
     title: extractTitle(html) || rest.title || url,
     domain: extractDomain(url),
     canonicalUrl: extractCanonicalUrl(html) || url,

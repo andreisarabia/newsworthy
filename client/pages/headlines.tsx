@@ -3,7 +3,7 @@ import React from 'react';
 import Header from '../components/Header';
 import App from '../components/App';
 
-export default class Home extends React.Component {
+export default class Headlines extends React.Component {
   render() {
     return (
       <>

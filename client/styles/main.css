@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css?family=Nunito');
+
+body {
+  font-family: Nunito, Arial, sans-serif;
+  margin: 0;
+  background: #1a1a1a;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+body,
+html,
+* {
+  box-sizing: border-box;
+  color: #b385bd;
+}
+
+body > div {
+  height: 100%;
+}
+
+ul {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}

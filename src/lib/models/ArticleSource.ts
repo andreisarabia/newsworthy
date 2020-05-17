@@ -46,17 +46,18 @@ export default class ArticleSource {
   }
 
   public static async findAll(
+    criteria: Partial<types.ArticleSourceProps> = {},
     options?: FindOneOptions
   ): Promise<ArticleSource[]> {
     const results = await db
       .getCollection(collectionName)
-      .find({}, options)
+      .find(criteria, options)
       .toArray();
 
     return results.map(data => new ArticleSource(data));
   }
 
-  public static saveSources(
+  public static saveAll(
     sources: types.ArticleSourceProps[]
   ): Promise<ArticleSource[]> {
     return Promise.all(sources.map(source => new ArticleSource(source).save()));

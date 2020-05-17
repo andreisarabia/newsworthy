@@ -78,7 +78,7 @@ export const sources = async (
     params
   );
 
-  ArticleSource.saveSources(data.sources);
+  ArticleSource.saveAll(data.sources);
 
   return data;
 };

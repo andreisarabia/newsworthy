@@ -1,6 +1,6 @@
 import { JSDOM } from 'jsdom';
 
-export const cleanUrl = (url: string): string => {
+export const normalizeUrl = (url: string): string => {
   if (!isUrl(url))
     throw new Error(`Provided parameter ${url} is not a valid URL`);
 

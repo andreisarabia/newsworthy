@@ -1,14 +1,14 @@
 import React from 'react';
 
 import Header from '../components/Header';
-import App from '../components/App';
+import NewsSources from '../components/NewsSources';
 
-export default class Home extends React.Component {
+export default class Sources extends React.Component {
   render() {
     return (
       <>
         <Header />
-        <App />
+        <NewsSources />
       </>
     );
   }

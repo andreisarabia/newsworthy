@@ -1,14 +1,14 @@
 import React from 'react';
 
 import Header from '../components/Header';
-import App from '../components/App';
+import UserSettings from '../components/UserSettings';
 
-export default class Home extends React.Component {
+export default class Settings extends React.Component {
   render() {
     return (
       <>
         <Header />
-        <App />
+        <UserSettings />
       </>
     );
   }
