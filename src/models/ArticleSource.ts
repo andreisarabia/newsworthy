@@ -1,6 +1,6 @@
 import { FindOneOptions } from 'mongodb';
 
-import * as db from '../database';
+import Database from '../database';
 
 import * as types from '../typings';
 
@@ -17,7 +17,7 @@ export default class ArticleSource {
     return this.props.id;
   }
 
-  public get data() {
+  public get data(): Omit<types.ArticleSourceProps, '_id'> {
     const { _id, ...publicData } = this.props;
 
     return Object.freeze(publicData);
@@ -28,9 +28,11 @@ export default class ArticleSource {
   }
 
   private async save(): Promise<this> {
-    await db
-      .getCollection(collectionName)
-      .findOneAndReplace({ url: this.url }, this.data, { upsert: true });
+    await Database.getCollection(collectionName).findOneAndReplace(
+      { url: this.url },
+      this.data,
+      { upsert: true }
+    );
 
     return this;
   }
@@ -38,9 +40,9 @@ export default class ArticleSource {
   public static async findOne(
     criteria: Partial<types.ArticleSourceProps>
   ): Promise<ArticleSource | null> {
-    const sourcesData = await db
-      .getCollection(collectionName)
-      .findOne(criteria);
+    const sourcesData = await Database.getCollection(collectionName).findOne(
+      criteria
+    );
 
     return sourcesData ? new ArticleSource(sourcesData) : null;
   }
@@ -49,8 +51,7 @@ export default class ArticleSource {
     criteria: Partial<types.ArticleSourceProps> = {},
     options?: FindOneOptions
   ): Promise<ArticleSource[]> {
-    const results = await db
-      .getCollection(collectionName)
+    const results = await Database.getCollection(collectionName)
       .find(criteria, options)
       .toArray();
 
@@ -65,7 +66,7 @@ export default class ArticleSource {
 
   public static async dropCollection() {
     try {
-      await db.getCollection(collectionName).drop();
+      await Database.getCollection(collectionName).drop();
 
       return true;
     } catch {

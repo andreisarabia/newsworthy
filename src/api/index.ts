@@ -2,9 +2,9 @@ import qs from 'querystring';
 
 import axios, { AxiosResponse } from 'axios';
 
-import { extractContentFromUrl } from '../parser';
 import ArticleSource from '../models/ArticleSource';
 import Config from '../config';
+import Parser from '../parser';
 
 import * as types from '../typings';
 
@@ -31,7 +31,8 @@ const populateEmptyContent = (
 ): Promise<types.ArticleApiData[]> =>
   Promise.all(
     articles.map(async (data: types.ArticleApiData) => {
-      if (!data.content) data.content = await extractContentFromUrl(data.url);
+      if (!data.content)
+        data.content = await Parser.extractContentFromUrl(data.url);
 
       return { ...data };
     })

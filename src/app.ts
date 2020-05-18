@@ -7,9 +7,9 @@ import nextApp from 'next';
 
 import sessionLogger from './middlewares/sessionLogger';
 import apiRouter from './routes/api';
-import * as db from './database';
+import Database from './database';
 import Config from './config';
-import { timestamp, isoTimestamp } from './util/time';
+import { timestamp } from './util/time';
 import { isUrl } from './util/url';
 
 type ContentSecurityPolicy = {
@@ -108,8 +108,8 @@ export default class Application {
 
   public async setup(): Promise<this> {
     if (shouldCompile)
-      await Promise.all([this.clientApp.prepare(), db.initialize()]);
-    else await db.initialize();
+      await Promise.all([this.clientApp.prepare(), Database.initialize()]);
+    else await Database.initialize();
 
     this.attachMiddlewares();
 

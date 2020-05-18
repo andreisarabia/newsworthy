@@ -1,17 +1,16 @@
 import axios from 'axios';
 import { FindOneOptions } from 'mongodb';
 
-import * as db from '../database';
+import Database from '../database';
+import Parser from '../parser';
 import { articlesCache } from '../routes/api';
 import { toUniqueArray } from '../util/fns';
 import { normalizeUrl } from '../util/url';
-import { extractUrlData } from '../parser';
 import { extractCanonicalUrl, extractDomain, extractSlug } from '../util/url';
 
 import * as types from '../typings';
 
 const collectionName = 'saved_articles';
-const { log } = console;
 
 export default class SavedArticle {
   private constructor(private props: types.NewsArticleProps) {}
@@ -24,7 +23,7 @@ export default class SavedArticle {
     return this.props.tags;
   }
 
-  public get data() {
+  public get data(): Omit<types.NewsArticleProps, '_id'> {
     const { _id, ...publicData } = this.props;
 
     return Object.freeze(publicData);
@@ -40,9 +39,11 @@ export default class SavedArticle {
   }
 
   public async save(): Promise<this> {
-    await db
-      .getCollection(collectionName)
-      .findOneAndReplace({ url: this.url }, this.data, { upsert: true });
+    await Database.getCollection(collectionName).findOneAndReplace(
+      { url: this.url },
+      this.data,
+      { upsert: true }
+    );
 
     return this;
   }
@@ -50,9 +51,9 @@ export default class SavedArticle {
   public static async findOne(
     criteria: Partial<types.NewsArticleProps>
   ): Promise<SavedArticle | null> {
-    const articleData = await db
-      .getCollection(collectionName)
-      .findOne(criteria);
+    const articleData = await Database.getCollection(collectionName).findOne(
+      criteria
+    );
 
     return articleData ? new SavedArticle(articleData) : null;
   }
@@ -61,16 +62,15 @@ export default class SavedArticle {
     criteria: Partial<types.NewsArticleProps>,
     options: FindOneOptions = { limit: 100 }
   ): Promise<SavedArticle[]> {
-    const results = await db
-      .getCollection(collectionName)
+    const results = await Database.getCollection(collectionName)
       .find(criteria, options)
       .toArray();
 
     return results.map(data => new SavedArticle(data));
   }
 
-  public static async addNew(url: string): Promise<SavedArticle> {
-    url = normalizeUrl(url);
+  public static async addNew(dirtyUrl: string): Promise<SavedArticle> {
+    const url = normalizeUrl(dirtyUrl);
 
     let data: types.NewsArticleProps;
 
@@ -88,7 +88,7 @@ export default class SavedArticle {
         tags: [],
       };
     } else {
-      data = await extractUrlData(url);
+      data = await Parser.extractUrlData(url);
     }
 
     return new SavedArticle(data).save();
@@ -96,7 +96,7 @@ export default class SavedArticle {
 
   public static async dropCollection() {
     try {
-      await db.getCollection(collectionName).drop();
+      await Database.getCollection(collectionName).drop();
 
       return true;
     } catch {
