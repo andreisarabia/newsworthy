@@ -48,19 +48,20 @@ const sendSources = async (ctx: Koa.ParameterizedContext) => {
   ctx.body = { data };
 };
 
-const saveArticles = async (ctx: Koa.ParameterizedContext) => {
-  const { urls = [] } = ctx.request.body as { urls: string[] };
+const saveArticle = async (ctx: Koa.ParameterizedContext) => {
+  const { url = '' } = ctx.request.body as { url: string };
 
-  ctx.assert(
-    Array.isArray(urls) && urls.every(isUrl),
-    400,
-    'A provided article link is not valid. Please check your entries.'
-  );
+  if (isUrl(url)) {
+    const article = await SavedArticle.addNew(url);
 
-  const savedArticles = await SavedArticle.saveAll(urls);
-  const articles = savedArticles.map(article => article.data);
+    ctx.body = { article: article.data };
+  } else {
+    ctx.status = 400;
 
-  ctx.body = { count: articles.length, articles };
+    ctx.body = {
+      msg: 'A provided article link is not valid. Please check your entry.',
+    };
+  }
 };
 
 const addTagsToArticle = async (ctx: Koa.ParameterizedContext) => {
@@ -115,7 +116,7 @@ export default new KoaRouter({ prefix: '/api/article' })
   .post('/news/top-headlines', sendTopHeadlines)
   .post('/news/everything', sendEverything)
   .post('/news/sources', sendSources)
-  .post('/save', saveArticles)
+  .post('/save', saveArticle)
   .post('/add-tags', addTagsToArticle)
   .get('/list', findArticles)
   .get('/sources', sendArticleSources)

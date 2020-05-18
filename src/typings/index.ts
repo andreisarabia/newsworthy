@@ -27,6 +27,7 @@ export interface ArticleApiData {
   urlToImage?: string | null;
   publishedAt: Date;
   content: string | null;
+  wordCount: number;
 }
 
 export interface NewsArticleProps extends MongoModelProps, ArticleApiData {

@@ -54,3 +54,12 @@ export const COUNTRIES = new Set([
   've',
   'za',
 ]);
+
+export const HTML_ENTITIES = new Map([
+  ['&', '&amp;'],
+  ['<', '&lt;'],
+  ['>', '&gt;'],
+  ['"', '&quot;'],
+  ["'", '&#x27;'],
+  ['/', '&#x2F;'],
+]);

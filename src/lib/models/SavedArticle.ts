@@ -73,31 +73,29 @@ export default class SavedArticle {
     return results.map(data => new SavedArticle(data));
   }
 
-  public static saveAll(urls: string[]): Promise<SavedArticle[]> {
-    return Promise.all(
-      toUniqueArray(urls.map(normalizeUrl)).map(async url => {
-        const articleData = await this.parseData(url);
+  public static async addNew(url: string): Promise<SavedArticle> {
+    url = normalizeUrl(url);
 
-        return new SavedArticle(articleData).save();
-      })
-    );
-  }
+    let data: types.NewsArticleProps;
 
-  private static async parseData(url: string): Promise<types.NewsArticleProps> {
-    if (!articlesCache.has(url)) return extractUrlData(url);
+    if (articlesCache.has(url)) {
+      const savedApiArticle = articlesCache.get(url)!;
+      const { data: html }: { data: string } = await axios.get(url);
 
-    const savedApiArticle = articlesCache.get(url)!;
-    const { data: html }: { data: string } = await axios.get(url);
+      data = {
+        ...savedApiArticle,
+        domain: extractDomain(url),
+        canonicalUrl: extractCanonicalUrl(html) || url,
+        slug: extractSlug(url),
+        sizeInBytes: Buffer.byteLength(savedApiArticle.content || ''),
+        createdAt: new Date(),
+        tags: [],
+      };
+    } else {
+      data = await extractUrlData(url);
+    }
 
-    return {
-      ...savedApiArticle,
-      domain: extractDomain(url),
-      canonicalUrl: extractCanonicalUrl(html) || url,
-      slug: extractSlug(url),
-      sizeInBytes: Buffer.byteLength(savedApiArticle.content || ''),
-      createdAt: new Date(),
-      tags: [],
-    };
+    return new SavedArticle(data).save();
   }
 
   public static async dropCollection() {

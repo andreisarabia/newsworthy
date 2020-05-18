@@ -16,8 +16,9 @@ type ContentSecurityPolicy = {
   [k: string]: string[];
 };
 
-const IS_DEV = Config.get('env') === 'dev';
 const ONE_DAY_IN_MS = 60 * 60 * 24 * 1000;
+const isDev = Config.get('env') === 'dev';
+const shouldCompile = isDev && !process.argv.includes('no-compile');
 
 export default class Application {
   private static readonly singleton = new Application();
@@ -33,7 +34,7 @@ export default class Application {
       'https://fonts.gstatic.com',
     ],
   };
-  private clientApp = nextApp({ dir: './client', dev: IS_DEV });
+  private clientApp = nextApp({ dir: './client', dev: isDev });
   private pathMap = new Map<string, string[]>();
   private koa = new Koa();
 
@@ -83,11 +84,10 @@ export default class Application {
       .use(apiRouter.routes())
       .use(apiRouter.allowedMethods())
       .on('error', (err, ctx) => {
-        console.error({
-          url: ctx.url,
-          at: isoTimestamp(),
-          error: err instanceof Error ? err.stack || err.message : err,
-        });
+        console.error(
+          err instanceof Error ? err.stack || err.message : err,
+          ctx.url
+        );
       });
 
     this.attachNuxtMiddleware();
@@ -112,7 +112,8 @@ export default class Application {
   }
 
   public async setup(): Promise<this> {
-    if (IS_DEV) await Promise.all([this.clientApp.prepare(), db.initialize()]);
+    if (shouldCompile)
+      await Promise.all([this.clientApp.prepare(), db.initialize()]);
     else await db.initialize();
 
     this.attachMiddlewares();

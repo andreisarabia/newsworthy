@@ -5,22 +5,15 @@ import striptags from 'striptags';
 
 import ArticleSource from './lib/models/ArticleSource';
 import { sanitizeHtml } from './util/sanitizer';
-import {
-  normalizeUrl,
-  extractAuthor,
-  extractCanonicalUrl,
-  extractDomain,
-  extractSlug,
-  extractTitle,
-  extractPublishedTime,
-} from './util/url';
-import { properCase } from './util/words';
+import * as urlUtils from './util/url';
+import * as wordsUtils from './util/words';
 
 import * as types from './typings';
 
-export const extractContentFromUrl = async (url: string): Promise<string> => {
-  url = normalizeUrl(url);
-
+export const extractContentFromUrl = async (
+  dirtyUrl: string
+): Promise<string> => {
+  const url = urlUtils.normalizeUrl(dirtyUrl);
   const { data: dirtyHtml }: { data: string } = await axios.get(url);
   const html = sanitizeHtml(dirtyHtml, { ADD_TAGS: ['link'] });
   const parsed: ParseResult = await Mercury.parse(url, {
@@ -30,46 +23,52 @@ export const extractContentFromUrl = async (url: string): Promise<string> => {
   return parsed.content || '';
 };
 
-// this just gets the first paragraph of a given HTML snippet
+// gets the first paragraph of a given HTML snippet
 const extractDescription = (html: string): string => {
-  const p = new JSDOM(html).window.document.querySelector('p');
+  const p = JSDOM.fragment(html).querySelector('p');
 
   return p ? p.innerText || striptags(p.innerHTML) : '';
 };
 
 export const extractUrlData = async (
-  url: string
+  dirtyUrl: string
 ): Promise<types.NewsArticleProps> => {
-  url = normalizeUrl(url);
-
+  const url = urlUtils.normalizeUrl(dirtyUrl);
   const { data: dirtyHtml } = await axios.get(url);
-  const html = sanitizeHtml(dirtyHtml, { ADD_TAGS: ['link', 'title'] });
+  const html = sanitizeHtml(dirtyHtml, { ADD_TAGS: ['link', 'title', 'meta'] });
+
   const [parseResult, articleSrc] = await Promise.all([
     Mercury.parse(url, { html: Buffer.from(html, 'utf-8') }),
     ArticleSource.findOne({ url: new URL(url).origin }),
   ]);
-
   const { content, date_published, ...rest } = parseResult!;
+  const description = rest.excerpt || extractDescription(content || '');
   const source = articleSrc
     ? { id: articleSrc.id, name: articleSrc.name }
     : { id: '', name: '' };
-  const description = rest.excerpt || extractDescription(content || '');
   const publishedAt = date_published
     ? new Date(date_published)
-    : extractPublishedTime(html) || new Date();
+    : urlUtils.extractPublishedTime(html) || new Date();
+  const wordCount =
+    rest.word_count || (content ? wordsUtils.countWords(content) : 0);
+  const author = wordsUtils.properCase(
+    urlUtils.extractAuthor(html) || rest.author || ''
+  );
+  const title = urlUtils.extractTitle(html) || rest.title || url;
 
   return {
     source,
     content,
     publishedAt,
     url,
+    author,
+    title,
+    wordCount,
     urlToImage: rest.lead_image_url,
     description: `${description.trim()}...`,
-    author: properCase(extractAuthor(html) || rest.author || ''),
-    title: extractTitle(html) || rest.title || url,
-    domain: extractDomain(url),
-    canonicalUrl: extractCanonicalUrl(html) || url,
-    slug: extractSlug(url),
+    domain: urlUtils.extractDomain(url),
+    canonicalUrl: urlUtils.extractCanonicalUrl(html) || url,
+    slug: urlUtils.extractSlug(url),
     sizeInBytes: Buffer.byteLength(content || ''),
     createdAt: new Date(),
     tags: [],
