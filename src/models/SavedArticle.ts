@@ -1,18 +1,14 @@
 import axios from 'axios';
 import { FindOneOptions } from 'mongodb';
 
-import * as db from '../../database';
+import * as db from '../database';
 import { articlesCache } from '../routes/api';
-import { toUniqueArray } from '../../util/fns';
-import { normalizeUrl } from '../../util/url';
-import { extractUrlData } from '../../parser';
-import {
-  extractCanonicalUrl,
-  extractDomain,
-  extractSlug,
-} from '../../util/url';
+import { toUniqueArray } from '../util/fns';
+import { normalizeUrl } from '../util/url';
+import { extractUrlData } from '../parser';
+import { extractCanonicalUrl, extractDomain, extractSlug } from '../util/url';
 
-import * as types from '../../typings';
+import * as types from '../typings';
 
 const collectionName = 'saved_articles';
 const { log } = console;

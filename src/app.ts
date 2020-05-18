@@ -5,8 +5,8 @@ import koaBody from 'koa-bodyparser';
 import koaSession from 'koa-session';
 import nextApp from 'next';
 
-import sessionLogger from './lib/middlewares/sessionLogger';
-import apiRouter from './lib/routes/api';
+import sessionLogger from './middlewares/sessionLogger';
+import apiRouter from './routes/api';
 import * as db from './database';
 import Config from './config';
 import { timestamp, isoTimestamp } from './util/time';
@@ -43,19 +43,14 @@ export default class Application {
   }
 
   private get cspHeader(): string {
-    let header = '';
-
-    Object.entries(this.csp).forEach(([src, directives]) => {
+    return Object.entries(this.csp).reduce((acc, [src, directives], i) => {
       const preppedDirectives = directives.map(directive =>
         isUrl(directive) ? directive : `'${directive}'`
       );
-
       const directiveRule = `${src} ${preppedDirectives.join(' ')}`;
 
-      header += header === '' ? directiveRule : `; ${directiveRule}`;
-    });
-
-    return header;
+      return i === 0 ? directiveRule : `${acc}; ${directiveRule}`;
+    }, '');
   }
 
   private attachMiddlewares() {

@@ -1,8 +1,8 @@
 import { FindOneOptions } from 'mongodb';
 
-import * as db from '../../database';
+import * as db from '../database';
 
-import * as types from '../../typings';
+import * as types from '../typings';
 
 const collectionName = 'article_sources';
 

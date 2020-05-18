@@ -2,11 +2,11 @@ import qs from 'querystring';
 
 import axios, { AxiosResponse } from 'axios';
 
-import { extractContentFromUrl } from '../../parser';
+import { extractContentFromUrl } from '../parser';
 import ArticleSource from '../models/ArticleSource';
-import Config from '../../config';
+import Config from '../config';
 
-import * as types from '../../typings';
+import * as types from '../typings';
 
 const { log } = console;
 

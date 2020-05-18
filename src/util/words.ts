@@ -1,21 +1,19 @@
 const isAllCaps = (str: string) => /^[A-Z]+$/.test(str);
 
+export const removeExtraSpaces = (str: string) =>
+  str.replace(/\s\s+/g, ' ').trim();
+
 export const properCase = (name: string): string => {
   if (name.trim() === '') return '';
-  else if (!isAllCaps(name)) return name;
+  else if (!isAllCaps(name)) return removeExtraSpaces(name);
 
-  let normalized = '';
-
-  name
-    .replace(/\s\s+/g, '')
+  return removeExtraSpaces(name)
     .split(' ')
-    .forEach(word => {
-      normalized += word.slice(0, 1).toUpperCase();
-      normalized += word.slice(1).toLowerCase();
-      normalized += ' ';
-    });
-
-  return normalized.trim();
+    .map(
+      word => `${word.slice(0, 1).toUpperCase()} ${word.slice(1).toLowerCase()}`
+    )
+    .join(' ');
 };
 
-export const countWords = (str: string) => str.trim().split(/\s\s+/).length;
+export const countWords = (str: string) =>
+  removeExtraSpaces(str).replace(/\n /, '\n').split(' ').length;

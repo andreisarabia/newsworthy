@@ -13,6 +13,8 @@ export default class App extends React.Component {
   }
 
   render() {
-    return <ApplicationView></ApplicationView>;
+    return <ApplicationView>
+      
+    </ApplicationView>;
   }
 }

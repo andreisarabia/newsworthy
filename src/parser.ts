@@ -3,7 +3,7 @@ import { JSDOM } from 'jsdom';
 import Mercury, { ParseResult } from '@postlight/mercury-parser';
 import striptags from 'striptags';
 
-import ArticleSource from './lib/models/ArticleSource';
+import ArticleSource from './models/ArticleSource';
 import { sanitizeHtml } from './util/sanitizer';
 import * as urlUtils from './util/url';
 import * as wordsUtils from './util/words';
@@ -15,7 +15,7 @@ export const extractContentFromUrl = async (
 ): Promise<string> => {
   const url = urlUtils.normalizeUrl(dirtyUrl);
   const { data: dirtyHtml }: { data: string } = await axios.get(url);
-  const html = sanitizeHtml(dirtyHtml, { ADD_TAGS: ['link'] });
+  const html = sanitizeHtml(dirtyHtml);
   const parsed: ParseResult = await Mercury.parse(url, {
     html: Buffer.from(html, 'utf-8'),
   });
@@ -35,7 +35,7 @@ export const extractUrlData = async (
 ): Promise<types.NewsArticleProps> => {
   const url = urlUtils.normalizeUrl(dirtyUrl);
   const { data: dirtyHtml } = await axios.get(url);
-  const html = sanitizeHtml(dirtyHtml, { ADD_TAGS: ['link', 'title', 'meta'] });
+  const html = sanitizeHtml(dirtyHtml);
 
   const [parseResult, articleSrc] = await Promise.all([
     Mercury.parse(url, { html: Buffer.from(html, 'utf-8') }),

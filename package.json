@@ -7,6 +7,7 @@
   "scripts": {
     "tsc": "node_modules/.bin/tsc --watch",
     "dev": "cross-env NODE_ENV=development node_modules/.bin/nodemon build/index.js",
+    "dev:nc": "npm run dev no-compile",
     "build": "cd client && next build",
     "prod": "npm run build && cross-env NODE_ENV=production node build/index.js"
   },
@@ -17,7 +18,7 @@
     "@postlight/mercury-parser": "^2.2.0",
     "axios": "^0.19.2",
     "chalk": "^4.0.0",
-    "date-fns": "^2.13.0",
+    "date-fns": "^2.14.0",
     "dompurify": "^2.0.11",
     "jsdom": "^16.2.2",
     "koa": "^2.12.0",
@@ -42,7 +43,7 @@
     "@types/koa-bodyparser": "^4.3.0",
     "@types/koa-router": "^7.4.1",
     "@types/koa-session": "^5.10.2",
-    "@types/mongodb": "^3.5.17",
+    "@types/mongodb": "^3.5.18",
     "@types/node": "^13.13.6",
     "@types/postlight__mercury-parser": "^2.2.2",
     "@types/react": "^16.9.35",

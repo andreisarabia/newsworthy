@@ -4,12 +4,12 @@ import KoaRouter from 'koa-router';
 import SavedArticle from '../models/SavedArticle';
 import ArticleSource from '../models/ArticleSource';
 import * as newsApi from '../api';
-import Cache from '../../cache';
-import Config from '../../config';
-import { isUrl } from '../../util/url';
-import { isAlphanumeric } from '../../util/is';
+import Cache from '../cache';
+import Config from '../config';
+import { isUrl } from '../util/url';
+import { isAlphanumeric } from '../util/is';
 
-import * as types from '../../typings';
+import * as types from '../typings';
 
 const IS_DEV = Config.get('env') === 'dev';
 const { log } = console;
