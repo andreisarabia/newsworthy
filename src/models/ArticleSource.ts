@@ -1,13 +1,15 @@
 import { FindOneOptions } from 'mongodb';
 
-import Database from '../database';
+import Model from './Model';
 
 import * as types from '../typings';
 
-const collectionName = 'article_sources';
+export default class ArticleSource extends Model<types.ArticleSourceProps> {
+  protected static readonly collectionName = 'article_sources';
 
-export default class ArticleSource {
-  private constructor(private props: types.ArticleSourceProps) {}
+  private constructor(protected props: types.ArticleSourceProps) {
+    super(props);
+  }
 
   private get url() {
     return this.props.url;
@@ -27,8 +29,8 @@ export default class ArticleSource {
     return this.props.name;
   }
 
-  private async save(): Promise<this> {
-    await Database.getCollection(collectionName).findOneAndReplace(
+  public async save(): Promise<this> {
+    await ArticleSource.collection.findOneAndReplace(
       { url: this.url },
       this.data,
       { upsert: true }
@@ -40,9 +42,7 @@ export default class ArticleSource {
   public static async findOne(
     criteria: Partial<types.ArticleSourceProps>
   ): Promise<ArticleSource | null> {
-    const sourcesData = await Database.getCollection(collectionName).findOne(
-      criteria
-    );
+    const sourcesData = await super.collection.findOne(criteria);
 
     return sourcesData ? new ArticleSource(sourcesData) : null;
   }
@@ -51,9 +51,7 @@ export default class ArticleSource {
     criteria: Partial<types.ArticleSourceProps> = {},
     options?: FindOneOptions
   ): Promise<ArticleSource[]> {
-    const results = await Database.getCollection(collectionName)
-      .find(criteria, options)
-      .toArray();
+    const results = await super.collection.find(criteria, options).toArray();
 
     return results.map(data => new ArticleSource(data));
   }
@@ -66,7 +64,7 @@ export default class ArticleSource {
 
   public static async dropCollection() {
     try {
-      await Database.getCollection(collectionName).drop();
+      await super.collection.drop();
 
       return true;
     } catch {

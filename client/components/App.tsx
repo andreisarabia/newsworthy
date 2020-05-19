@@ -1,20 +1,44 @@
 import React from 'react';
 import styled from 'styled-components';
-import axios from 'axios';
+
+import { SavedArticleProps } from '../typings';
 
 const ApplicationView = styled.main`
-  display: flex;
+  font-family: initial;
+
+  > h2 {
+    margin: 2rem;
+  }
 `;
 
-export default class App extends React.Component {
-  async componentDidMount() {
-    const { data } = await axios.get('/api/article/list');
-    console.log(data);
+export default class App extends React.Component<SavedArticleProps, {}> {
+  constructor(props) {
+    super(props);
   }
 
   render() {
-    return <ApplicationView>
-      
-    </ApplicationView>;
+    return (
+      <ApplicationView>
+        <h2>Home</h2>
+        <section id='saved-articles'>
+          {this.props.list.map(article => (
+            <div key={article.url} className='saved-article'>
+              <div>
+                <img src={article.urlToImage || ''} alt='' />
+              </div>
+              <div>
+                <h3>{article.title}</h3>
+                <span>
+                  <a href={article.domain} target='_blank'>
+                    {article.domain}
+                  </a>
+                  •<span>{article.wordCount}</span>
+                </span>
+              </div>
+            </div>
+          ))}
+        </section>
+      </ApplicationView>
+    );
   }
 }

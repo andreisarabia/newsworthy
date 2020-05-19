@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { FindOneOptions } from 'mongodb';
+import { v4 as uuidv4 } from 'uuid';
 
-import Database from '../database';
+import Model from './Model';
 import Parser from '../parser';
 import { articlesCache } from '../routes/api';
 import { toUniqueArray } from '../util/fns';
@@ -10,10 +11,16 @@ import { extractCanonicalUrl, extractDomain, extractSlug } from '../util/url';
 
 import * as types from '../typings';
 
-const collectionName = 'saved_articles';
+export default class SavedArticle extends Model<types.NewsArticleProps> {
+  protected static readonly collectionName = 'saved_articles';
 
-export default class SavedArticle {
-  private constructor(private props: types.NewsArticleProps) {}
+  private constructor(protected props: types.NewsArticleProps) {
+    super(props);
+  }
+
+  private get uniqueId() {
+    return this.props.uniqueId;
+  }
 
   private get url() {
     return this.props.url;
@@ -21,12 +28,6 @@ export default class SavedArticle {
 
   public get tags() {
     return this.props.tags;
-  }
-
-  public get data(): Omit<types.NewsArticleProps, '_id'> {
-    const { _id, ...publicData } = this.props;
-
-    return Object.freeze(publicData);
   }
 
   public addTags(tags: string[]): this {
@@ -39,11 +40,20 @@ export default class SavedArticle {
   }
 
   public async save(): Promise<this> {
-    await Database.getCollection(collectionName).findOneAndReplace(
-      { url: this.url },
-      this.data,
-      { upsert: true }
-    );
+    let criteria: Partial<types.NewsArticleProps>;
+    let data: types.NewsArticleProps;
+
+    if (this.uniqueId) {
+      criteria = { uniqueId: this.uniqueId };
+      data = this.props;
+    } else {
+      criteria = { url: this.url };
+      data = { ...this.props, uniqueId: uuidv4() };
+    }
+
+    await Model.collection.findOneAndReplace(criteria, data, {
+      upsert: true,
+    });
 
     return this;
   }
@@ -51,9 +61,7 @@ export default class SavedArticle {
   public static async findOne(
     criteria: Partial<types.NewsArticleProps>
   ): Promise<SavedArticle | null> {
-    const articleData = await Database.getCollection(collectionName).findOne(
-      criteria
-    );
+    const articleData = await super.collection.findOne(criteria);
 
     return articleData ? new SavedArticle(articleData) : null;
   }
@@ -62,9 +70,7 @@ export default class SavedArticle {
     criteria: Partial<types.NewsArticleProps>,
     options: FindOneOptions = { limit: 100 }
   ): Promise<SavedArticle[]> {
-    const results = await Database.getCollection(collectionName)
-      .find(criteria, options)
-      .toArray();
+    const results = await super.collection.find(criteria, options).toArray();
 
     return results.map(data => new SavedArticle(data));
   }
@@ -96,7 +102,7 @@ export default class SavedArticle {
 
   public static async dropCollection() {
     try {
-      await Database.getCollection(collectionName).drop();
+      await super.collection.drop();
 
       return true;
     } catch {

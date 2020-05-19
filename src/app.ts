@@ -25,14 +25,9 @@ export default class Application {
 
   private readonly port = Config.get('port');
   private readonly csp: ContentSecurityPolicy = {
-    'default-src': ['self', 'https://fonts.gstatic.com'],
+    'default-src': ['self'],
     'script-src': ['self', 'unsafe-inline', 'unsafe-eval'],
-    'style-src': [
-      'self',
-      'unsafe-inline',
-      'https://fonts.googleapis.com',
-      'https://fonts.gstatic.com',
-    ],
+    'style-src': ['self', 'unsafe-inline'],
   };
   private clientApp = nextApp({ dir: './client', dev: isDev });
   private pathMap = new Map<string, string[]>();

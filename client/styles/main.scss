@@ -1,7 +1,5 @@
-@import url('https://fonts.googleapis.com/css?family=Nunito');
-
 body {
-  font-family: Nunito, Arial, sans-serif;
+  font-family: 'Times New Roman', Arial, sans-serif;
   margin: 0;
   background: #1a1a1a;
   height: 100vh;
@@ -26,4 +24,22 @@ ul {
 a {
   text-decoration: none;
   color: inherit;
+}
+
+a:hover,
+span.fas:hover {
+  color: #53a9d2 !important;
+}
+
+li:hover {
+  a,
+  span.fas,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #53a9d2 !important;
+  }
 }

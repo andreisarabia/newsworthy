@@ -11,8 +11,9 @@ type NewsCategory =
   | 'sports'
   | 'technology';
 
-interface MongoModelProps {
+export interface MongoModelProps {
   _id?: ObjectId;
+  uniqueId?: string; // for clientside rendering
 }
 
 export interface ArticleApiData {

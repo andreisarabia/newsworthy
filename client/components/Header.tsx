@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 
 interface HeaderState {
   showSearchArticleInput: boolean;
@@ -43,10 +43,13 @@ const Navbar = styled.header`
   #navigation-options {
     > ul {
       display: flex;
+
       > li {
         margin: 0.5rem 1rem;
       }
       a.nav-link {
+        font-family: Arial, sans-serif !important;
+        font-size: 0.94rem;
         padding: 1rem;
         :hover {
           color: whitesmoke;
