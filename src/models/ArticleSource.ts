@@ -9,6 +9,9 @@ export default class ArticleSource extends Model<types.ArticleSourceProps> {
 
   private constructor(protected props: types.ArticleSourceProps) {
     super(props);
+
+    if (this.props.name === '')
+      this.props.name = new URL(this.props.url).hostname;
   }
 
   private get url() {
@@ -17,12 +20,6 @@ export default class ArticleSource extends Model<types.ArticleSourceProps> {
 
   public get id() {
     return this.props.id;
-  }
-
-  public get data(): Omit<types.ArticleSourceProps, '_id'> {
-    const { _id, ...publicData } = this.props;
-
-    return Object.freeze(publicData);
   }
 
   public get name() {
@@ -60,15 +57,5 @@ export default class ArticleSource extends Model<types.ArticleSourceProps> {
     sources: types.ArticleSourceProps[]
   ): Promise<ArticleSource[]> {
     return Promise.all(sources.map(source => new ArticleSource(source).save()));
-  }
-
-  public static async dropCollection() {
-    try {
-      await super.collection.drop();
-
-      return true;
-    } catch {
-      return false;
-    }
   }
 }

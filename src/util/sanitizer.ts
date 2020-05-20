@@ -2,11 +2,20 @@ import dompurify from 'dompurify';
 import { JSDOM } from 'jsdom';
 
 import { HTML_ENTITIES } from '../constants';
-import { removeExtraSpaces } from './words';
+import { removeExtraLines, removeExtraSpaces } from './words';
 
-const escapeHtml = (html: string): string =>
-  HTML_ENTITIES.reduce(
+export const escapeHtml = (html: string): string => {
+  const encoded = HTML_ENTITIES.reduce(
     (acc, [entity, encoding]) => acc.replace(entity, encoding),
+    html
+  );
+
+  return encoded;
+};
+
+export const unescapeHtml = (html: string): string =>
+  HTML_ENTITIES.reduce(
+    (acc, [entity, encoding]) => acc.replace(encoding, entity),
     html
   );
 
@@ -26,8 +35,6 @@ const sanitizerOptions: dompurify.Config & {
 const sanitizer = dompurify(<any>new JSDOM('').window);
 
 export const sanitizeHtml = (html: string): string =>
-  removeExtraSpaces(
-    escapeHtml(sanitizer.sanitize(html, sanitizerOptions))
-      .replace(/\n/g, '')
-      .replace(/\r/g, '')
+  removeExtraLines(
+    removeExtraSpaces(sanitizer.sanitize(html, sanitizerOptions))
   );

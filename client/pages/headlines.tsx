@@ -8,7 +8,7 @@ export default class Headlines extends React.Component {
     return (
       <>
         <Header />
-        <App />
+        <App list={[]} />
       </>
     );
   }

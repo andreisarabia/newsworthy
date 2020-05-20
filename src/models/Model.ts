@@ -1,6 +1,6 @@
 import { Collection } from 'mongodb';
 
-import Database from '../database';
+import Database from '../Database';
 
 import * as types from '../typings';
 

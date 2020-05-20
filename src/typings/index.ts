@@ -35,7 +35,9 @@ export interface NewsArticleProps extends MongoModelProps, ArticleApiData {
   domain: string;
   canonicalUrl: string;
   slug: string;
-  sizeInBytes: number;
+  sizeOfArticlePage: number;
+  sizeOfArticle: number;
+  articleToPageSizeRatio: number;
   createdAt: Date;
   tags: string[];
 }

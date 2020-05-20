@@ -9,6 +9,12 @@ const ApplicationView = styled.main`
   > h2 {
     margin: 2rem;
   }
+
+  > section#saved-articles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    width: 90%;
+  }
 `;
 
 export default class App extends React.Component<SavedArticleProps, {}> {
@@ -30,9 +36,9 @@ export default class App extends React.Component<SavedArticleProps, {}> {
                 <h3>{article.title}</h3>
                 <span>
                   <a href={article.domain} target='_blank'>
-                    {article.domain}
+                    {article.source.name || article.domain}
                   </a>
-                  •<span>{article.wordCount}</span>
+                  {article.wordCount && `• ${(<span>article.wordCount</span>)}`}
                 </span>
               </div>
             </div>

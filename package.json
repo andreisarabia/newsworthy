@@ -27,6 +27,7 @@
     "koa-session": "^5.13.1",
     "mongodb": "^3.5.6",
     "next": "^9.4.1",
+    "playwright": "^1.0.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "sass": "^1.26.5",
@@ -45,16 +46,16 @@
     "@types/koa-router": "^7.4.1",
     "@types/koa-session": "^5.10.2",
     "@types/mongodb": "^3.5.18",
-    "@types/node": "^13.13.6",
+    "@types/node": "^13.13.8",
     "@types/postlight__mercury-parser": "^2.2.2",
     "@types/react": "^16.9.35",
     "@types/react-dom": "^16.9.8",
     "@types/striptags": "^3.1.1",
     "@types/styled-components": "^5.1.0",
-    "@types/uuid": "^7.0.3",
+    "@types/uuid": "^7.0.4",
     "babel-plugin-styled-components": "^1.10.7",
     "cross-env": "^7.0.2",
     "nodemon": "^2.0.4",
-    "typescript": "^3.9.2"
+    "typescript": "^3.9.3"
   }
 }

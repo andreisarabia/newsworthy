@@ -4,10 +4,11 @@ import KoaRouter from 'koa-router';
 import SavedArticle from '../models/SavedArticle';
 import ArticleSource from '../models/ArticleSource';
 import * as newsApi from '../api';
-import Cache from '../cache';
-import Config from '../config';
+import Cache from '../Cache';
+import Config from '../Config';
 import { isUrl } from '../util/url';
 import { isAlphanumeric } from '../util/is';
+import { escapeHtml } from '../util/sanitizer';
 
 import * as types from '../typings';
 
@@ -100,7 +101,10 @@ const findArticles = async (ctx: Koa.ParameterizedContext) => {
   else skip = +page * limit;
 
   const savedArticles = await SavedArticle.findAll({}, { limit, skip });
-  const articles = savedArticles.map(article => article.data);
+  const articles = savedArticles.map(article => ({
+    ...article.data,
+    content: article.content ? escapeHtml(article.content) : null,
+  }));
 
   ctx.body = { count: articles.length, articles };
 };

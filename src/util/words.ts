@@ -1,5 +1,8 @@
 const isAllCaps = (str: string) => /^[A-Z]+$/.test(str);
 
+export const removeExtraLines = (str: string) =>
+  str.replace(/\n/g, '').replace(/\r/g, '');
+
 export const removeExtraSpaces = (str: string) =>
   str.replace(/\s\s+/g, ' ').trim();
 

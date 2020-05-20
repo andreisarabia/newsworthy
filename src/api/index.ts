@@ -3,8 +3,8 @@ import qs from 'querystring';
 import axios, { AxiosResponse } from 'axios';
 
 import ArticleSource from '../models/ArticleSource';
-import Config from '../config';
-import Parser from '../parser';
+import Config from '../Config';
+import Parser from '../Parser';
 
 import * as types from '../typings';
 

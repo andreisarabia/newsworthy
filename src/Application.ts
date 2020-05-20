@@ -7,8 +7,9 @@ import nextApp from 'next';
 
 import sessionLogger from './middlewares/sessionLogger';
 import apiRouter from './routes/api';
-import Database from './database';
-import Config from './config';
+import Database from './Database';
+import Config from './Config';
+import Parser from './Parser';
 import { timestamp } from './util/time';
 import { isUrl } from './util/url';
 
@@ -32,6 +33,7 @@ export default class Application {
   private clientApp = nextApp({ dir: './client', dev: isDev });
   private pathMap = new Map<string, string[]>();
   private koa = new Koa();
+  private startupMessages: string[] = [];
 
   private constructor() {
     this.koa.keys = ['__newsworthy_app'];
@@ -101,10 +103,32 @@ export default class Application {
     });
   }
 
+  private async initializeNuxtApp() {
+    const start = Date.now();
+    if (shouldCompile) await this.clientApp.prepare();
+    this.startupMessages.push(`${Date.now() - start}ms to start Next.js.`);
+  }
+
+  private async initializeDatabase() {
+    const start = Date.now();
+    await Parser.initialize();
+    this.startupMessages.push(
+      `${Date.now() - start}ms to connect to database.`
+    );
+  }
+
+  private async initializeParser() {
+    const start = Date.now();
+    await Database.initialize();
+    this.startupMessages.push(`${Date.now() - start}ms to prep browsers.`);
+  }
+
   public async setup(): Promise<this> {
-    if (shouldCompile)
-      await Promise.all([this.clientApp.prepare(), Database.initialize()]);
-    else await Database.initialize();
+    await Promise.all([
+      this.initializeNuxtApp(),
+      this.initializeParser(),
+      this.initializeDatabase(),
+    ]);
 
     this.attachMiddlewares();
 
@@ -117,7 +141,8 @@ export default class Application {
         `[${timestamp()}]`,
         `\nListening on port ${this.port}...\n`,
         'API Paths: ',
-        this.pathMap
+        this.pathMap,
+        `\n${this.startupMessages.join('\n')}`
       );
     });
   }

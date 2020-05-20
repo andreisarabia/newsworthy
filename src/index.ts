@@ -1,4 +1,4 @@
-import Application from './app';
+import Application from './Application';
 
 const main = async () => {
   const app = await Application.instance.setup();

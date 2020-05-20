@@ -1,7 +1,7 @@
 import { MongoClient, Collection } from 'mongodb';
 
-import Cache from './cache';
-import Config from './config';
+import Cache from './Cache';
+import Config from './Config';
 
 export default class Database {
   private static cache = new Cache<Collection>();

@@ -1,13 +1,9 @@
-import axios from 'axios';
 import { FindOneOptions } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
 
 import Model from './Model';
-import Parser from '../parser';
-import { articlesCache } from '../routes/api';
+import Parser from '../Parser';
 import { toUniqueArray } from '../util/fns';
-import { normalizeUrl } from '../util/url';
-import { extractCanonicalUrl, extractDomain, extractSlug } from '../util/url';
 
 import * as types from '../typings';
 
@@ -24,6 +20,10 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
 
   private get url() {
     return this.props.url;
+  }
+
+  public get content() {
+    return this.props.content;
   }
 
   public get tags() {
@@ -51,7 +51,7 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
       data = { ...this.props, uniqueId: uuidv4() };
     }
 
-    await Model.collection.findOneAndReplace(criteria, data, {
+    await SavedArticle.collection.findOneAndReplace(criteria, data, {
       upsert: true,
     });
 
@@ -75,38 +75,9 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
     return results.map(data => new SavedArticle(data));
   }
 
-  public static async addNew(dirtyUrl: string): Promise<SavedArticle> {
-    const url = normalizeUrl(dirtyUrl);
-
-    let data: types.NewsArticleProps;
-
-    if (articlesCache.has(url)) {
-      const savedApiArticle = articlesCache.get(url)!;
-      const { data: html }: { data: string } = await axios.get(url);
-
-      data = {
-        ...savedApiArticle,
-        domain: extractDomain(url),
-        canonicalUrl: extractCanonicalUrl(html) || url,
-        slug: extractSlug(url),
-        sizeInBytes: Buffer.byteLength(savedApiArticle.content || ''),
-        createdAt: new Date(),
-        tags: [],
-      };
-    } else {
-      data = await Parser.extractUrlData(url);
-    }
+  public static async addNew(url: string): Promise<SavedArticle> {
+    const data = await Parser.extractUrlData(url);
 
     return new SavedArticle(data).save();
-  }
-
-  public static async dropCollection() {
-    try {
-      await super.collection.drop();
-
-      return true;
-    } catch {
-      return false;
-    }
   }
 }

@@ -28,11 +28,16 @@ export const extractCanonicalUrl = (html: string): string | null => {
 
 export const extractDomain = (url: string): string => new URL(url).hostname;
 
-export const extractTitle = (html: string): string =>
-  new JSDOM(html).window.document.title;
+export const extractTitle = (html: string): string => {
+  const title = new JSDOM(html).window.document.head.querySelector('title');
+
+  return title?.innerHTML || '';
+};
 
 export const extractPublishedTime = (html: string): Date | null => {
-  const metaTags = new JSDOM(html).window.document.querySelectorAll('meta');
+  const metaTags = new JSDOM(html).window.document.head.querySelectorAll(
+    'meta'
+  );
 
   let backupPublishedTime: Date | null = null;
 

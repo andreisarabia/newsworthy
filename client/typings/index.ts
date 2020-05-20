@@ -13,6 +13,10 @@ interface SavedArticle {
   sizeInBytes: number;
   createdAt: Date;
   tags: string[];
+  source: {
+    id: string | null;
+    name: string | null;
+  };
 }
 
 export interface SavedArticleProps {
