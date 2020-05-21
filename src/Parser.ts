@@ -4,16 +4,7 @@ import Mercury, { ParseResult } from '@postlight/mercury-parser';
 import striptags from 'striptags';
 
 import ArticleSource from './models/ArticleSource';
-import {
-  extractCanonicalUrl,
-  extractDomain,
-  extractMetaPropertyContent,
-  extractSlug,
-  normalizeUrl,
-  sanitizeHtml,
-  countWords,
-  properCase,
-} from './util';
+import * as utils from './util';
 
 import * as types from './typings';
 
@@ -21,7 +12,7 @@ export default class Parser {
   public static async extractUrlData(
     dirtyUrl: string
   ): Promise<types.NewsArticleProps> {
-    const url = normalizeUrl(dirtyUrl);
+    const url = utils.normalizeUrl(dirtyUrl);
     const html = await this.getWebpageHtml(url);
     const [parseResult, articleSrc] = await Promise.all([
       Mercury.parse(url, { html: Buffer.from(html, 'utf-8') }),
@@ -40,7 +31,7 @@ export default class Parser {
       'twitter:image': twitterImage,
       'article:published_time': publishedAt,
       'article:modified_time': modifiedAt,
-    } = extractMetaPropertyContent(
+    } = utils.extractMetaPropertyContent(
       html,
       'author',
       'description',
@@ -73,11 +64,11 @@ export default class Parser {
       ),
       urlToImage: urlToImage || twitterImage || rest.lead_image_url,
       articleToPageSizeRatio: sizeOfArticle / sizeOfArticlePage,
-      wordCount: countWords(content!) || rest.word_count,
-      canonical: extractCanonicalUrl(html) || url,
-      author: properCase(author || ''),
-      domain: extractDomain(url),
-      slug: extractSlug(url),
+      wordCount: utils.countWords(content!) || rest.word_count,
+      canonical: utils.extractCanonicalUrl(html) || url,
+      author: utils.properCase(author || ''),
+      domain: utils.extractDomain(url),
+      slug: utils.extractSlug(url),
       createdAt: new Date(),
       description:
         description ||
@@ -89,7 +80,7 @@ export default class Parser {
   }
 
   public static async extractContentFromUrl(dirtyUrl: string): Promise<string> {
-    const url = normalizeUrl(dirtyUrl);
+    const url = utils.normalizeUrl(dirtyUrl);
     const html = await this.getWebpageHtml(url);
     const { content = '' }: ParseResult = await Mercury.parse(url, {
       html: Buffer.from(html, 'utf-8'),
@@ -112,6 +103,6 @@ export default class Parser {
   }
 
   private static async getWebpageHtml(url: string): Promise<string> {
-    return sanitizeHtml((await axios.get(url)).data);
+    return utils.sanitizeHtml((await axios.get(url)).data);
   }
 }

@@ -16,7 +16,7 @@ export const extractMetaPropertyContent = <K extends MetaTagProperties>(
   html: string,
   ...properties: K[]
 ): Partial<{ [key in K]: string | null }> => {
-  const extractedContent: Partial<{ [key in K]: string | null }> = {};
+  const extractedContent: Partial<{ [key in K]: string | undefined }> = {};
   const metaTags = new JSDOM(html).window.document.head.querySelectorAll(
     'meta'
   );
@@ -27,7 +27,9 @@ export const extractMetaPropertyContent = <K extends MetaTagProperties>(
     if (!tagProp) continue;
     else if (!(properties as string[]).includes(tagProp)) continue;
 
-    extractedContent[tagProp as K] = tag.content || null;
+    const content = tag.content.trim();
+
+    if (content !== '') extractedContent[tagProp as K] = content;
   }
 
   return extractedContent;
