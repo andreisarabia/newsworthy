@@ -14,12 +14,7 @@ export default class Config {
   };
 
   public static get<K extends keyof ConfigFile>(key: K): ConfigFile[K] {
-    switch (key) {
-      case 'port':
-        return this.settings[key] || (3000 as ConfigFile[K]);
-      default:
-        return this.settings[key];
-    }
+    return this.settings[key];
   }
 
   public static getAll<K extends keyof ConfigFile>(

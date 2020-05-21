@@ -33,7 +33,7 @@ export interface ArticleApiData {
 
 export interface NewsArticleProps extends MongoModelProps, ArticleApiData {
   domain: string;
-  canonicalUrl: string;
+  canonical: string;
   slug: string;
   sizeOfArticlePage: number;
   sizeOfArticle: number;

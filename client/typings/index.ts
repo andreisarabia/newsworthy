@@ -8,7 +8,7 @@ interface SavedArticle {
   content: string | null;
   wordCount: number;
   domain: string;
-  canonicalUrl: string;
+  canonical: string;
   slug: string;
   sizeInBytes: number;
   createdAt: Date;

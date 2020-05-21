@@ -5,19 +5,20 @@ import { HTML_ENTITIES } from '../constants';
 import { removeExtraLines, removeExtraSpaces } from './words';
 
 export const escapeHtml = (html: string): string => {
-  const encoded = HTML_ENTITIES.reduce(
-    (acc, [entity, encoding]) => acc.replace(entity, encoding),
-    html
-  );
+  HTML_ENTITIES.forEach(([entity, encoding]) => {
+    html = html.replace(new RegExp(entity, 'g'), encoding);
+  });
 
-  return encoded;
+  return html;
 };
 
-export const unescapeHtml = (html: string): string =>
-  HTML_ENTITIES.reduce(
-    (acc, [entity, encoding]) => acc.replace(encoding, entity),
-    html
-  );
+export const unescapeHtml = (html: string): string => {
+  HTML_ENTITIES.forEach(([entity, encoding]) => {
+    html = html.replace(new RegExp(encoding, 'g'), entity);
+  });
+
+  return html;
+};
 
 const sanitizerOptions: dompurify.Config & {
   RETURN_DOM_FRAGMENT: false;
@@ -34,7 +35,8 @@ const sanitizerOptions: dompurify.Config & {
 
 const sanitizer = dompurify(<any>new JSDOM('').window);
 
-export const sanitizeHtml = (html: string): string =>
-  removeExtraLines(
-    removeExtraSpaces(sanitizer.sanitize(html, sanitizerOptions))
-  );
+export const sanitizeHtml = (html: string): string => {
+  const sanitized = sanitizer.sanitize(html, sanitizerOptions);
+
+  return removeExtraSpaces(removeExtraLines(sanitized));
+};

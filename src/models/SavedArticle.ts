@@ -27,12 +27,12 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
   }
 
   public get tags() {
-    return this.props.tags;
+    return [...this.props.tags];
   }
 
   public addTags(tags: string[]): this {
     this.props.tags = toUniqueArray([
-      ...this.props.tags,
+      ...this.tags,
       ...tags.map(str => str.trim()),
     ]).sort();
 

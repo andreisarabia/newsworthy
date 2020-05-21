@@ -1,113 +1,117 @@
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import Mercury, { ParseResult } from '@postlight/mercury-parser';
-import playwright, { Browser } from 'playwright';
 import striptags from 'striptags';
 
 import ArticleSource from './models/ArticleSource';
-import { sanitizeHtml } from './util/sanitizer';
-import * as urlUtils from './util/url';
-import { countWords, properCase } from './util/words';
+import {
+  extractCanonicalUrl,
+  extractDomain,
+  extractMetaPropertyContent,
+  extractSlug,
+  normalizeUrl,
+  sanitizeHtml,
+  countWords,
+  properCase,
+} from './util';
 
 import * as types from './typings';
 
 export default class Parser {
-  private static browserSet = new Set<Browser>();
-
-  public static async initialize() {
-    const browsers: Browser[] = await Promise.all([
-      playwright.chromium.launch(),
-      playwright.firefox.launch(),
-      playwright.webkit.launch(),
-    ]);
-
-    browsers.forEach(browser => {
-      this.browserSet.add(browser);
-    });
-  }
-
   public static async extractUrlData(
     dirtyUrl: string
   ): Promise<types.NewsArticleProps> {
-    const url = urlUtils.normalizeUrl(dirtyUrl);
+    const url = normalizeUrl(dirtyUrl);
     const html = await this.getWebpageHtml(url);
-
     const [parseResult, articleSrc] = await Promise.all([
       Mercury.parse(url, { html: Buffer.from(html, 'utf-8') }),
       ArticleSource.findOne({ url: new URL(url).origin }),
     ]);
 
-    const { content, ...rest } = parseResult!;
+    const { content = '', ...rest } = parseResult!;
+    const {
+      author = rest.author,
+      description,
+      'og:title': ogTitle,
+      'og:description': ogDescription,
+      'twitter:title': twitterTitle,
+      'twitter:description': twitterDescription,
+      'og:image': urlToImage,
+      'twitter:image': twitterImage,
+      'article:published_time': publishedAt,
+      'article:modified_time': modifiedAt,
+    } = extractMetaPropertyContent(
+      html,
+      'author',
+      'description',
+      'og:description',
+      'og:title',
+      'twitter:title',
+      'twitter:description',
+      'og:image',
+      'twitter:image',
+      'article:published_time',
+      'article:modified_time'
+    );
+
     const source = articleSrc
       ? { id: articleSrc.id, name: articleSrc.name }
       : { id: '', name: '' };
-
-    const publishedAt =
-      urlUtils.extractPublishedTime(html) ||
-      new Date(rest.date_published || Date.now());
-
     const sizeOfArticlePage = Buffer.byteLength(html);
-    const sizeOfArticle = Buffer.byteLength(content || '');
+    const sizeOfArticle = Buffer.byteLength(content!);
+    const title = ogTitle || twitterTitle;
 
     return {
       source,
-      content,
-      publishedAt,
       url,
       sizeOfArticlePage,
       sizeOfArticle,
+      content,
+      title: title || this.extractTitleTagText(html) || rest.title || url,
+      publishedAt: new Date(
+        publishedAt || modifiedAt || rest.date_published || Date.now()
+      ),
+      urlToImage: urlToImage || twitterImage || rest.lead_image_url,
       articleToPageSizeRatio: sizeOfArticle / sizeOfArticlePage,
-      description: rest.excerpt || this.extractDescription(content || ''),
-      wordCount: rest.word_count || (content ? countWords(content) : 0),
-      author: properCase(urlUtils.extractAuthor(html) || rest.author || ''),
-      title: urlUtils.extractTitle(html) || rest.title || url,
-      domain: urlUtils.extractDomain(url),
-      urlToImage: rest.lead_image_url,
-      canonicalUrl: urlUtils.extractCanonicalUrl(html) || url,
-      slug: urlUtils.extractSlug(url),
+      wordCount: countWords(content!) || rest.word_count,
+      canonical: extractCanonicalUrl(html) || url,
+      author: properCase(author || ''),
+      domain: extractDomain(url),
+      slug: extractSlug(url),
       createdAt: new Date(),
+      description:
+        description ||
+        ogDescription ||
+        twitterDescription ||
+        this.extractFirstParagraph(content!),
       tags: [],
     };
   }
 
-  public static async extractContentFromUrl(dirtyUrl: string) {
-    const url = urlUtils.normalizeUrl(dirtyUrl);
-    const { data: dirtyHtml }: { data: string } = await axios.get(url);
-    const html = sanitizeHtml(dirtyHtml);
-    const parsed: ParseResult = await Mercury.parse(url, {
+  public static async extractContentFromUrl(dirtyUrl: string): Promise<string> {
+    const url = normalizeUrl(dirtyUrl);
+    const html = await this.getWebpageHtml(url);
+    const { content = '' }: ParseResult = await Mercury.parse(url, {
       html: Buffer.from(html, 'utf-8'),
     });
 
-    return parsed.content || '';
+    return content!;
   }
 
   // gets the first paragraph of a given HTML snippet
-  private static extractDescription(html: string): string {
-    const p = JSDOM.fragment(html).querySelector('p');
+  private static extractFirstParagraph(snippet: string): string {
+    const p = JSDOM.fragment(snippet).querySelector('p');
 
-    return p ? p.innerText || striptags(p.innerHTML) : '';
+    return p ? striptags(p.innerText || p.innerHTML) : '';
   }
 
-  private static getRandomBrowser(): Browser {
-    const random = Math.floor(Math.random() * this.browserSet.size);
+  private static extractTitleTagText(html: string): string | null {
+    const title = new JSDOM(html).window.document.head.querySelector('title');
 
-    return [...this.browserSet][random];
+    return title ? title.textContent || striptags(title.innerHTML) : null;
   }
 
   private static async getWebpageHtml(url: string): Promise<string> {
-    const context = await this.getRandomBrowser().newContext();
-    const page = await context.newPage();
-
-    await page.goto(url);
-
-    const [head, body] = await Promise.all([page.$('head'), page.$('body')]);
-    const dirtyHtmls = await Promise.all([
-      head ? head.innerHTML() : '',
-      body ? body.innerHTML() : '',
-    ]);
-
-    Promise.all([context.clearCookies(), page.close()]);
-
-    return sanitizeHtml(dirtyHtmls.join(''));
+    return sanitizeHtml((await axios.get(url)).data);
   }
 }

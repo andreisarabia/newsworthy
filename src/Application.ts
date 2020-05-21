@@ -9,7 +9,6 @@ import sessionLogger from './middlewares/sessionLogger';
 import apiRouter from './routes/api';
 import Database from './Database';
 import Config from './Config';
-import Parser from './Parser';
 import { timestamp } from './util/time';
 import { isUrl } from './util/url';
 
@@ -24,7 +23,7 @@ const shouldCompile = isDev && !process.argv.includes('no-compile');
 export default class Application {
   private static readonly singleton = new Application();
 
-  private readonly port = Config.get('port');
+  private readonly port = Config.get('port') || 3000;
   private readonly csp: ContentSecurityPolicy = {
     'default-src': ['self'],
     'script-src': ['self', 'unsafe-inline', 'unsafe-eval'],
@@ -111,24 +110,14 @@ export default class Application {
 
   private async initializeDatabase() {
     const start = Date.now();
-    await Parser.initialize();
+    await Database.initialize();
     this.startupMessages.push(
       `${Date.now() - start}ms to connect to database.`
     );
   }
 
-  private async initializeParser() {
-    const start = Date.now();
-    await Database.initialize();
-    this.startupMessages.push(`${Date.now() - start}ms to prep browsers.`);
-  }
-
   public async setup(): Promise<this> {
-    await Promise.all([
-      this.initializeNuxtApp(),
-      this.initializeParser(),
-      this.initializeDatabase(),
-    ]);
+    await Promise.all([this.initializeNuxtApp(), this.initializeDatabase()]);
 
     this.attachMiddlewares();
 
