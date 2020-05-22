@@ -14,19 +14,19 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
     super(props);
   }
 
-  private get uniqueId() {
-    return this.props.uniqueId;
+  private get uniqueId(): string {
+    return this.props.uniqueId!;
   }
 
-  private get url() {
+  private get url(): string {
     return this.props.url;
   }
 
-  public get content() {
+  public get content(): string | null {
     return this.props.content;
   }
 
-  public get tags() {
+  public get tags(): string[] {
     return [...this.props.tags];
   }
 
@@ -45,10 +45,10 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
 
     if (this.uniqueId) {
       criteria = { uniqueId: this.uniqueId };
-      data = this.props;
+      data = this.data;
     } else {
       criteria = { url: this.url };
-      data = { ...this.props, uniqueId: uuidv4() };
+      data = { ...this.data, uniqueId: uuidv4() };
     }
 
     await SavedArticle.collection.findOneAndReplace(criteria, data, {

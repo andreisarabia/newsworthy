@@ -17,7 +17,7 @@ export default abstract class Model<T extends types.MongoModelProps> {
     return Object.freeze(publicData);
   }
 
-  public static async dropCollection() {
+  public static async dropCollection(): Promise<boolean> {
     try {
       await this.collection.drop();
 

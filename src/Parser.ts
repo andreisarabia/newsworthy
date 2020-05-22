@@ -13,26 +13,10 @@ export default class Parser {
     dirtyUrl: string
   ): Promise<types.NewsArticleProps> {
     const url = utils.normalizeUrl(dirtyUrl);
-    const html = await this.getWebpageHtml(url);
-    const [parseResult, articleSrc] = await Promise.all([
-      Mercury.parse(url, { html: Buffer.from(html, 'utf-8') }),
-      ArticleSource.findOne({ url: new URL(url).origin }),
-    ]);
-
-    const { content = '', ...rest } = parseResult!;
-    const {
-      author = rest.author,
-      description,
-      'og:title': ogTitle,
-      'og:description': ogDescription,
-      'twitter:title': twitterTitle,
-      'twitter:description': twitterDescription,
-      'og:image': urlToImage,
-      'twitter:image': twitterImage,
-      'article:published_time': publishedAt,
-      'article:modified_time': modifiedAt,
-    } = utils.extractMetaPropertyContent(
-      html,
+    const dirtyHtml = await this.getWebpageHtml(url);
+    const html = utils.sanitizeHtml(dirtyHtml);
+    const meta = utils.extractMetaContent(
+      html, // extract meta here because sanitization removes some properties
       'author',
       'description',
       'og:description',
@@ -44,49 +28,58 @@ export default class Parser {
       'article:published_time',
       'article:modified_time'
     );
+    const [parseResult, articleSrc] = await Promise.all([
+      Mercury.parse(url, { html: Buffer.from(html) }),
+      ArticleSource.findOne({ url: new URL(url).origin }),
+    ]);
+
+    const { content, ...rest } = parseResult!;
+    const sizeOfArticlePage = Buffer.byteLength(html);
+    const sizeOfArticle = Buffer.byteLength(content || '');
+    const urlToImage = meta['og:image'] || meta['twitter:image'];
+    const title = meta['og:title'] || meta['twitter:title'] || rest.title;
 
     const source = articleSrc
       ? { id: articleSrc.id, name: articleSrc.name }
       : { id: '', name: '' };
-    const sizeOfArticlePage = Buffer.byteLength(html);
-    const sizeOfArticle = Buffer.byteLength(content!);
-    const title = ogTitle || twitterTitle;
+    const publishedAt =
+      meta['article:published_time'] ||
+      meta['article:modified_time'] ||
+      rest.date_published;
+    const description =
+      meta['description'] ||
+      meta['og:description'] ||
+      meta['twitter:description'];
 
     return {
-      source,
       url,
-      sizeOfArticlePage,
+      source,
       sizeOfArticle,
-      content,
-      title: title || this.extractTitleTagText(html) || rest.title || url,
-      publishedAt: new Date(
-        publishedAt || modifiedAt || rest.date_published || Date.now()
-      ),
-      urlToImage: urlToImage || twitterImage || rest.lead_image_url,
-      articleToPageSizeRatio: sizeOfArticle / sizeOfArticlePage,
-      wordCount: utils.countWords(content!) || rest.word_count,
-      canonical: utils.extractCanonicalUrl(html) || url,
-      author: utils.properCase(author || ''),
-      domain: utils.extractDomain(url),
-      slug: utils.extractSlug(url),
+      sizeOfArticlePage,
       createdAt: new Date(),
-      description:
-        description ||
-        ogDescription ||
-        twitterDescription ||
-        this.extractFirstParagraph(content!),
+      slug: utils.extractSlug(url),
+      domain: utils.extractDomain(url),
+      urlToImage: urlToImage || rest.lead_image_url,
+      publishedAt: new Date(publishedAt || Date.now()),
+      canonical: utils.extractCanonicalUrl(html) || url,
+      title: title || this.extractTitleTagText(html) || url,
+      articleToPageSizeRatio: sizeOfArticle / sizeOfArticlePage,
+      content: utils.escapeHtml(utils.unescapeHtml(content || '')),
+      author: utils.properCase(meta['author'] || rest.author || ''),
+      wordCount: content ? utils.countWords(content) : rest.word_count,
+      description: description || this.extractFirstParagraph(content || ''),
       tags: [],
     };
   }
 
   public static async extractContentFromUrl(dirtyUrl: string): Promise<string> {
     const url = utils.normalizeUrl(dirtyUrl);
-    const html = await this.getWebpageHtml(url);
-    const { content = '' }: ParseResult = await Mercury.parse(url, {
+    const html = utils.sanitizeHtml(await this.getWebpageHtml(url));
+    const { content }: ParseResult = await Mercury.parse(url, {
       html: Buffer.from(html, 'utf-8'),
     });
 
-    return content!;
+    return content || '';
   }
 
   // gets the first paragraph of a given HTML snippet
@@ -103,6 +96,10 @@ export default class Parser {
   }
 
   private static async getWebpageHtml(url: string): Promise<string> {
-    return utils.sanitizeHtml((await axios.get(url)).data);
+    return (await axios.get(url)).data;
+  }
+
+  private static removeExtra(str: string): string {
+    return utils.removeExtraSpaces(utils.removeExtraLines(str));
   }
 }

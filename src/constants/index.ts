@@ -57,11 +57,13 @@ export const COUNTRIES = Object.freeze(
   ])
 );
 
-export const HTML_ENTITIES = Object.freeze([
-  ['&', '&amp;'],
-  ['<', '&lt;'],
-  ['>', '&gt;'],
-  ['"', '&quot;'],
-  ["'", '&#x27;'],
-  ['/', '&#x2F;'],
-]);
+export const htmlEntityMap = Object.freeze({
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+  '/': '&#x2F;',
+  '`': '&#x60;',
+  '=': '&#x3D;',
+}) as { [key: string]: string };

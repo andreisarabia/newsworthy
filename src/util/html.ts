@@ -12,7 +12,7 @@ type MetaTagProperties =
   | 'article:published_time'
   | 'article:modified_time';
 
-export const extractMetaPropertyContent = <K extends MetaTagProperties>(
+export const extractMetaContent = <K extends MetaTagProperties>(
   html: string,
   ...properties: K[]
 ): Partial<{ [key in K]: string | null }> => {
@@ -20,8 +20,17 @@ export const extractMetaPropertyContent = <K extends MetaTagProperties>(
   const metaTags = new JSDOM(html).window.document.head.querySelectorAll(
     'meta'
   );
+  const addDescription = properties.includes('description' as K);
 
   for (const tag of metaTags) {
+    if (addDescription && tag.name === 'description') {
+      const content = tag.content.trim();
+
+      if (content !== '') extractedContent['description' as K] = content;
+
+      continue;
+    }
+
     const tagProp = tag.getAttribute('property');
 
     if (!tagProp) continue;

@@ -24,11 +24,11 @@ export default class Application {
   private static readonly singleton = new Application();
 
   private readonly port = Config.get('port') || 3000;
-  private readonly csp: ContentSecurityPolicy = {
+  private csp: ContentSecurityPolicy = Object.freeze({
     'default-src': ['self'],
     'script-src': ['self', 'unsafe-inline', 'unsafe-eval'],
     'style-src': ['self', 'unsafe-inline'],
-  };
+  });
   private clientApp = nextApp({ dir: './client', dev: isDev });
   private pathMap = new Map<string, string[]>();
   private koa = new Koa();
@@ -39,14 +39,15 @@ export default class Application {
   }
 
   private get cspHeader(): string {
-    return Object.entries(this.csp).reduce((acc, [src, directives], i) => {
+    const srcDirectives = Object.entries(this.csp).map(([src, directives]) => {
       const preppedDirectives = directives.map(directive =>
         isUrl(directive) ? directive : `'${directive}'`
       );
-      const directiveRule = `${src} ${preppedDirectives.join(' ')}`;
 
-      return i === 0 ? directiveRule : `${acc}; ${directiveRule}`;
-    }, '');
+      return `${src} ${preppedDirectives.join(' ')}`;
+    });
+
+    return srcDirectives.join('; ');
   }
 
   private attachMiddlewares() {

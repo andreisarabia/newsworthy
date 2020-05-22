@@ -15,6 +15,11 @@ const ApplicationView = styled.main`
     grid-template-columns: repeat(4, 1fr);
     width: 90%;
   }
+
+  span.article-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
 `;
 
 export default class App extends React.Component<SavedArticleProps, {}> {
@@ -34,11 +39,16 @@ export default class App extends React.Component<SavedArticleProps, {}> {
               </div>
               <div>
                 <h3>{article.title}</h3>
-                <span>
-                  <a href={article.domain} target='_blank'>
+                <span className='article-meta'>
+                  <a
+                    className='meta-link'
+                    href={article.domain}
+                    target='_blank'
+                  >
                     {article.source.name || article.domain}
                   </a>
-                  {article.wordCount && `• ${(<span>article.wordCount</span>)}`}
+                  <span className='dot-separator'>•</span>
+                  <span>{article.wordCount} words</span>
                 </span>
               </div>
             </div>

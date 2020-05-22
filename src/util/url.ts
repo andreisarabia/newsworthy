@@ -20,5 +20,8 @@ export const extractDomain = (url: string): string => new URL(url).hostname;
 export const extractSlug = (url: string): string => {
   const { pathname } = new URL(url); // easier to parse URLs with queries
 
-  return pathname.substring(pathname.lastIndexOf('/'));
+  return pathname.substring(
+    pathname.lastIndexOf('/'),
+    pathname.lastIndexOf('.')
+  );
 };

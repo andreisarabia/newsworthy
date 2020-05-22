@@ -2,10 +2,8 @@ build
 
 client/.next
 
+client/public
+
 config.json
 
 node_modules
-
-logo.png
-
-favicon.ico

@@ -8,12 +8,14 @@ export const removeExtraSpaces = (str: string) =>
 
 export const properCase = (name: string): string => {
   if (name.trim() === '') return '';
-  else if (!isAllCaps(name)) return removeExtraSpaces(name);
 
-  return removeExtraSpaces(name)
-    .split(' ')
+  const nameParts = name.split(' ');
+
+  if (nameParts.every(isAllCaps)) return removeExtraSpaces(name);
+
+  return nameParts
     .map(
-      word => `${word.slice(0, 1).toUpperCase()} ${word.slice(1).toLowerCase()}`
+      name => `${name.slice(0, 1).toUpperCase()}${name.slice(1).toLowerCase()}`
     )
     .join(' ');
 };
