@@ -1,8 +1,9 @@
 build
 
-client
+client/.next
+
+client/public
 
 config.json
 
 node_modules
-

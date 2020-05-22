@@ -2,20 +2,11 @@ import qs from 'querystring';
 
 import axios, { AxiosResponse } from 'axios';
 
-import { extractContentFromUrl } from '../../parser';
 import ArticleSource from '../models/ArticleSource';
-import Config from '../../config';
+import Config from '../Config';
+import Parser from '../Parser';
 
-import {
-  ApiRequest,
-  ArticleApiData,
-  NewsApiHeadlineRequest,
-  NewsApiHeadlineResponse,
-  NewsApiEverythingRequest,
-  NewsApiEverythingResponse,
-  NewsApiSourcesRequest,
-  NewsApiSourcesResponse,
-} from '../../typings';
+import * as types from '../typings';
 
 const { log } = console;
 
@@ -29,18 +20,19 @@ const api = axios.create({
 
 const queryApi = (
   uri: string,
-  params?: ApiRequest
+  params?: types.ApiRequest
 ): Promise<AxiosResponse<any>> => {
   if (params) uri += `?${qs.stringify({ ...params })}`;
   return api.get(uri);
 };
 
 const populateEmptyContent = (
-  articles: ArticleApiData[]
-): Promise<ArticleApiData[]> =>
+  articles: types.ArticleApiData[]
+): Promise<types.ArticleApiData[]> =>
   Promise.all(
-    articles.map(async (data: ArticleApiData) => {
-      if (!data.content) data.content = await extractContentFromUrl(data.url);
+    articles.map(async (data: types.ArticleApiData) => {
+      if (!data.content)
+        data.content = await Parser.extractContentFromUrl(data.url);
 
       return { ...data };
     })
@@ -52,9 +44,9 @@ const populateEmptyContent = (
  * sources. Sorted by the earliest date published first.
  */
 export const topHeadlines = async (
-  params?: NewsApiHeadlineRequest
-): Promise<NewsApiHeadlineResponse> => {
-  const { data }: { data: NewsApiHeadlineResponse } = await queryApi(
+  params?: types.NewsApiHeadlineRequest
+): Promise<types.NewsApiHeadlineResponse> => {
+  const { data }: { data: types.NewsApiHeadlineResponse } = await queryApi(
     '/top-headlines',
     params
   );
@@ -64,9 +56,9 @@ export const topHeadlines = async (
 };
 
 export const everything = async (
-  params?: NewsApiEverythingRequest
-): Promise<NewsApiEverythingResponse> => {
-  const { data }: { data: NewsApiEverythingResponse } = await queryApi(
+  params?: types.NewsApiEverythingRequest
+): Promise<types.NewsApiEverythingResponse> => {
+  const { data }: { data: types.NewsApiEverythingResponse } = await queryApi(
     '/everything',
     params
   );
@@ -80,14 +72,14 @@ export const everything = async (
  * are available from.
  */
 export const sources = async (
-  params?: NewsApiSourcesRequest
-): Promise<NewsApiSourcesResponse> => {
-  const { data }: { data: NewsApiSourcesResponse } = await queryApi(
+  params?: types.NewsApiSourcesRequest
+): Promise<types.NewsApiSourcesResponse> => {
+  const { data }: { data: types.NewsApiSourcesResponse } = await queryApi(
     '/sources',
     params
   );
 
-  ArticleSource.saveSources(data.sources);
+  ArticleSource.saveAll(data.sources);
 
   return data;
 };

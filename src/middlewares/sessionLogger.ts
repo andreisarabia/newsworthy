@@ -1,10 +1,10 @@
 import Koa from 'koa';
 import chalk from 'chalk';
 
-import { isoTimestamp } from '../../util/time';
-import Config from '../../config';
+import { isoTimestamp } from '../util/time';
+import Config from '../Config';
 
-const FILE_TYPES = ['_next', '.ico', '.json'];
+const FILE_TYPES = ['_next', '.ico', '.json', '.png', '.jpeg'];
 const IS_DEV = Config.get('env') === 'dev';
 const { log } = console;
 
@@ -33,6 +33,8 @@ export default () => async (ctx: Koa.ParameterizedContext, next: Koa.Next) => {
 
   try {
     if (isNextFile(path)) return await next(); // handled by Next
+
+    await ctx.session.manuallyCommit();
 
     if (!path.startsWith('/api'))
       ctx.session.views = ctx.session.views + 1 || 1; // count non-API calls as a `view`

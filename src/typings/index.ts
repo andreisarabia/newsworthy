@@ -11,8 +11,9 @@ type NewsCategory =
   | 'sports'
   | 'technology';
 
-interface MongoModelProps {
+export interface MongoModelProps {
   _id?: ObjectId;
+  uniqueId?: string; // for clientside rendering
 }
 
 export interface ArticleApiData {
@@ -27,13 +28,16 @@ export interface ArticleApiData {
   urlToImage?: string | null;
   publishedAt: Date;
   content: string | null;
+  wordCount: number;
 }
 
 export interface NewsArticleProps extends MongoModelProps, ArticleApiData {
   domain: string;
-  canonicalUrl: string;
+  canonical: string;
   slug: string;
-  sizeInBytes: number;
+  sizeOfArticlePage: number;
+  sizeOfArticle: number;
+  articleToPageSizeRatio: number;
   createdAt: Date;
   tags: string[];
 }
