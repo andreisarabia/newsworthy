@@ -17,9 +17,7 @@ export const extractMetaContent = <K extends MetaTagProperties>(
   ...properties: K[]
 ): Partial<{ [key in K]: string | null }> => {
   const extractedContent: Partial<{ [key in K]: string | undefined }> = {};
-  const metaTags = new JSDOM(html).window.document.head.querySelectorAll(
-    'meta'
-  );
+  const metaTags = JSDOM.fragment(html).querySelectorAll('meta');
   const addDescription = properties.includes('description' as K);
 
   for (const tag of metaTags) {

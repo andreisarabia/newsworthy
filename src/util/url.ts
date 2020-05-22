@@ -1,3 +1,5 @@
+const urlExtensions = ['.html', '.php', '.aspx'];
+
 export const normalizeUrl = (url: string): string => {
   if (!isUrl(url))
     throw new Error(`Provided parameter ${url} is not a valid URL`);
@@ -18,10 +20,9 @@ export const isUrl = (url: string): boolean => {
 export const extractDomain = (url: string): string => new URL(url).hostname;
 
 export const extractSlug = (url: string): string => {
-  const { pathname } = new URL(url); // easier to parse URLs with queries
+  const { pathname } = new URL(url);
 
-  return pathname.substring(
-    pathname.lastIndexOf('/'),
-    pathname.lastIndexOf('.')
-  );
+  return urlExtensions.some(ext => pathname.endsWith(ext))
+    ? pathname.substring(pathname.lastIndexOf('/'), pathname.lastIndexOf('.'))
+    : pathname.substring(pathname.lastIndexOf('/'));
 };

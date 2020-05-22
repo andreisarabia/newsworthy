@@ -72,8 +72,9 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
     criteria: Partial<types.NewsArticleProps>,
     options: FindOneOptions = { limit: 100 }
   ): Promise<SavedArticle[]> {
-    const cursor = super.collection.find(criteria, options);
-    const results: types.NewsArticleProps[] = await cursor.toArray();
+    const results: types.NewsArticleProps[] = await super.collection
+      .find(criteria, options)
+      .toArray();
 
     return results.map(data => new SavedArticle(data));
   }

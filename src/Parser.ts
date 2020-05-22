@@ -15,7 +15,6 @@ export default class Parser {
   ): Promise<types.NewsArticleProps> {
     const url = utils.normalizeUrl(dirtyUrl);
     const dirtyHtml = he.decode(await this.getWebpageHtml(url));
-    const html = utils.sanitizeHtml(dirtyHtml);
     const meta = utils.extractMetaContent(
       dirtyHtml, // extract meta here because sanitization removes some properties
       'author',
@@ -29,6 +28,7 @@ export default class Parser {
       'article:published_time',
       'article:modified_time'
     );
+    const html = utils.sanitizeHtml(dirtyHtml);
     const [parseResult, articleSrc] = await Promise.all([
       Mercury.parse(url, { html: Buffer.from(html) }),
       ArticleSource.findOne({ url: new URL(url).origin }),
@@ -52,7 +52,7 @@ export default class Parser {
       meta['og:description'] ||
       meta['twitter:description'];
 
-    return {
+    return Object.freeze({
       url,
       source,
       sizeOfArticle,
@@ -60,17 +60,17 @@ export default class Parser {
       createdAt: new Date(),
       slug: utils.extractSlug(url),
       domain: utils.extractDomain(url),
+      content: he.encode(content || ''),
       urlToImage: urlToImage || rest.lead_image_url,
       publishedAt: new Date(publishedAt || Date.now()),
       canonical: utils.extractCanonicalUrl(html) || url,
       title: title || this.extractTitleTagText(html) || url,
       articleToPageSizeRatio: sizeOfArticle / sizeOfArticlePage,
-      content: he.encode(content || ''),
       author: utils.properCase(meta['author'] || rest.author || ''),
       wordCount: content ? utils.countWords(content) : rest.word_count,
       description: description || this.extractFirstParagraph(content || ''),
       tags: [],
-    };
+    });
   }
 
   public static async extractContentFromUrl(dirtyUrl: string): Promise<string> {
