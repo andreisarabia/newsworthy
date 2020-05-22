@@ -7,7 +7,7 @@ export default class Database {
   private static cache = new Cache<Collection>();
   private static client: MongoClient | null = null;
 
-  public static async initialize() {
+  public static async initialize(): Promise<void> {
     if (this.client !== null) return;
 
     const mongoUri = Config.get('mongoUri');

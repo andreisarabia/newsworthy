@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import he from 'he';
 
 import { SavedArticleProps } from '../typings';
 
@@ -14,11 +15,21 @@ const ApplicationView = styled.main`
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     width: 90%;
+    color: #e6e0fb;
+
+    .saved-article {
+      margin: 1rem;
+    }
   }
 
   span.article-meta {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    font-size: 0.75rem;
+
+    .dot-separator {
+      text-align: center;
+    }
   }
 `;
 

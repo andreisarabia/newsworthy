@@ -61,7 +61,9 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
   public static async findOne(
     criteria: Partial<types.NewsArticleProps>
   ): Promise<SavedArticle | null> {
-    const articleData = await super.collection.findOne(criteria);
+    const articleData: types.NewsArticleProps | null = await super.collection.findOne(
+      criteria
+    );
 
     return articleData ? new SavedArticle(articleData) : null;
   }
@@ -70,13 +72,14 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
     criteria: Partial<types.NewsArticleProps>,
     options: FindOneOptions = { limit: 100 }
   ): Promise<SavedArticle[]> {
-    const results = await super.collection.find(criteria, options).toArray();
+    const cursor = super.collection.find(criteria, options);
+    const results: types.NewsArticleProps[] = await cursor.toArray();
 
     return results.map(data => new SavedArticle(data));
   }
 
   public static async addNew(url: string): Promise<SavedArticle> {
-    const data = await Parser.extractUrlData(url);
+    const data: types.NewsArticleProps = await Parser.extractUrlData(url);
 
     return new SavedArticle(data).save();
   }

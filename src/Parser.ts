@@ -2,6 +2,7 @@ import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import Mercury, { ParseResult } from '@postlight/mercury-parser';
 import striptags from 'striptags';
+import he from 'he'; // hehehe
 
 import ArticleSource from './models/ArticleSource';
 import * as utils from './util';
@@ -13,10 +14,10 @@ export default class Parser {
     dirtyUrl: string
   ): Promise<types.NewsArticleProps> {
     const url = utils.normalizeUrl(dirtyUrl);
-    const dirtyHtml = await this.getWebpageHtml(url);
+    const dirtyHtml = he.decode(await this.getWebpageHtml(url));
     const html = utils.sanitizeHtml(dirtyHtml);
     const meta = utils.extractMetaContent(
-      html, // extract meta here because sanitization removes some properties
+      dirtyHtml, // extract meta here because sanitization removes some properties
       'author',
       'description',
       'og:description',
@@ -64,7 +65,7 @@ export default class Parser {
       canonical: utils.extractCanonicalUrl(html) || url,
       title: title || this.extractTitleTagText(html) || url,
       articleToPageSizeRatio: sizeOfArticle / sizeOfArticlePage,
-      content: utils.escapeHtml(utils.unescapeHtml(content || '')),
+      content: he.encode(content || ''),
       author: utils.properCase(meta['author'] || rest.author || ''),
       wordCount: content ? utils.countWords(content) : rest.word_count,
       description: description || this.extractFirstParagraph(content || ''),

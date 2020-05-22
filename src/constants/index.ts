@@ -67,3 +67,5 @@ export const htmlEntityMap = Object.freeze({
   '`': '&#x60;',
   '=': '&#x3D;',
 }) as { [key: string]: string };
+
+export const htmlEntityRegex = /[&<>"'`=\/]/g;

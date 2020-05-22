@@ -28,6 +28,7 @@ export default class Application {
     'default-src': ['self'],
     'script-src': ['self', 'unsafe-inline', 'unsafe-eval'],
     'style-src': ['self', 'unsafe-inline'],
+    'img-src': ['self'],
   });
   private clientApp = nextApp({ dir: './client', dev: isDev });
   private pathMap = new Map<string, string[]>();
