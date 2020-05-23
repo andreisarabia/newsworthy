@@ -4,6 +4,9 @@ type ConfigFile = {
   newsApiKey: string;
   mongoUri: string;
   port?: number;
+  cloudinaryCloudName?: string;
+  cloudinaryApiKey?: string;
+  cloudinaryApiSecret?: string;
   env: 'dev' | 'prod';
 };
 

@@ -1,76 +1,14 @@
 import React from 'react';
 import Link from 'next/link';
-import styled from 'styled-components';
 import axios from 'axios';
+
+import Navbar from '../styles/Navbar';
 
 interface HeaderState {
   showSearchArticleInput: boolean;
   showAddLinkInput: boolean;
   linkToAdd: string;
 }
-
-const Navbar = styled.header`
-  display: flex;
-
-  #logo-full {
-    flex: 0.8;
-    text-align: center;
-
-    img#newsworthy-logo {
-      width: 60%;
-    }
-  }
-
-  #navigation-options {
-    flex: 1.5;
-  }
-
-  #user-actions {
-    flex: 1;
-
-    span.fas {
-      margin: 1rem;
-      padding: 1rem;
-      font-size: 1.3rem;
-      color: #b385bd;
-      :hover {
-        color: whitesmoke;
-        cursor: pointer;
-      }
-    }
-  }
-
-  #navigation-options {
-    > ul {
-      display: flex;
-
-      > li {
-        margin: 0.5rem 1rem;
-      }
-      a.nav-link {
-        font-family: Arial, sans-serif !important;
-        font-size: 0.94rem;
-        padding: 1rem;
-        :hover {
-          color: whitesmoke;
-        }
-      }
-    }
-
-    div#search-input {
-      margin: 1rem;
-    }
-
-    input {
-      width: 100%;
-      padding: 0.25rem;
-      font-size: 1.5rem;
-      background: rgb(0, 0, 0) none repeat scroll 0% 0%;
-      border: 2px solid rgb(0, 0, 0);
-      color: #b385bd;
-    }
-  }
-`;
 
 export default class Header extends React.Component<{}, HeaderState> {
   state = {

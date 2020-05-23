@@ -1,7 +1,6 @@
 import { AppProps } from 'next/app';
 
-import '../styles/main.scss';
-import '../styles/css/all.css';
+import '../public/css/main.css';
 
 export default function CustomApp({ Component, pageProps }: AppProps) {
   return <Component {...pageProps} />;

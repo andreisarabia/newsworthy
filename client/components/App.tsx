@@ -1,37 +1,8 @@
 import React from 'react';
-import styled from 'styled-components';
-import he from 'he';
+
+import ApplicationView from '../styles/ApplicationView';
 
 import { SavedArticleProps } from '../typings';
-
-const ApplicationView = styled.main`
-  font-family: initial;
-
-  > h2 {
-    margin: 2rem;
-  }
-
-  > section#saved-articles {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    width: 90%;
-    color: #e6e0fb;
-
-    .saved-article {
-      margin: 1rem;
-    }
-  }
-
-  span.article-meta {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    font-size: 0.75rem;
-
-    .dot-separator {
-      text-align: center;
-    }
-  }
-`;
 
 export default class App extends React.Component<SavedArticleProps, {}> {
   constructor(props) {

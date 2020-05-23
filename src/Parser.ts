@@ -1,10 +1,11 @@
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
-import Mercury, { ParseResult } from '@postlight/mercury-parser';
+import Mercury from '@postlight/mercury-parser';
 import striptags from 'striptags';
 import he from 'he'; // hehehe
 
 import ArticleSource from './models/ArticleSource';
+import cloudinary from './services/cloudinary';
 import * as utils from './util';
 
 import * as types from './typings';
@@ -14,9 +15,10 @@ export default class Parser {
     dirtyUrl: string
   ): Promise<types.NewsArticleProps> {
     const url = utils.normalizeUrl(dirtyUrl);
-    const dirtyHtml = he.decode(await this.getWebpageHtml(url));
+    const dirtyHtml = await this.getWebpageHtml(url);
+    const html = utils.sanitizeHtml(dirtyHtml);
     const meta = utils.extractMetaContent(
-      dirtyHtml, // extract meta here because sanitization removes some properties
+      dirtyHtml, // extract dirty html here because sanitization removes some properties
       'author',
       'description',
       'og:description',
@@ -28,17 +30,32 @@ export default class Parser {
       'article:published_time',
       'article:modified_time'
     );
-    const html = utils.sanitizeHtml(dirtyHtml);
-    const [parseResult, articleSrc] = await Promise.all([
+    const domain = utils.extractDomain(url);
+    const slug = utils.extractSlug(url);
+    const filename = `${slug}-${Date.now()}`;
+
+    let urlToImage: string | null =
+      meta['og:image'] || meta['twitter:image'] || null;
+
+    const [imageUrl, parseResult, articleSrc] = await Promise.all([
+      this.uploadToCloudinary({ url: urlToImage, folder: domain, filename }),
       Mercury.parse(url, { html: Buffer.from(html) }),
       ArticleSource.findOne({ url: new URL(url).origin }),
     ]);
 
-    const { content, ...rest } = parseResult!;
+    if (imageUrl) urlToImage = imageUrl;
+
+    const { content, lead_image_url, ...rest } = parseResult!;
+
+    if (!urlToImage && lead_image_url)
+      urlToImage = await this.uploadToCloudinary({
+        url: lead_image_url,
+        folder: domain,
+        filename,
+      });
+
     const sizeOfArticlePage = Buffer.byteLength(html);
     const sizeOfArticle = Buffer.byteLength(content || '');
-    const urlToImage = meta['og:image'] || meta['twitter:image'];
-    const title = meta['og:title'] || meta['twitter:title'] || rest.title;
 
     const source = articleSrc
       ? { id: articleSrc.id, name: articleSrc.name }
@@ -50,25 +67,32 @@ export default class Parser {
     const description =
       meta['description'] ||
       meta['og:description'] ||
-      meta['twitter:description'];
+      meta['twitter:description'] ||
+      this.extractFirstParagraph(content || '');
+    const title =
+      meta['og:title'] ||
+      meta['twitter:title'] ||
+      rest.title ||
+      this.extractTitleTagText(html) ||
+      url;
 
     return Object.freeze({
       url,
+      slug,
+      title,
+      domain,
       source,
+      urlToImage,
+      description,
       sizeOfArticle,
       sizeOfArticlePage,
       createdAt: new Date(),
-      slug: utils.extractSlug(url),
-      domain: utils.extractDomain(url),
       content: he.encode(content || ''),
-      urlToImage: urlToImage || rest.lead_image_url,
       publishedAt: new Date(publishedAt || Date.now()),
       canonical: utils.extractCanonicalUrl(html) || url,
-      title: title || this.extractTitleTagText(html) || url,
       articleToPageSizeRatio: sizeOfArticle / sizeOfArticlePage,
       author: utils.properCase(meta['author'] || rest.author || ''),
       wordCount: content ? utils.countWords(content) : rest.word_count,
-      description: description || this.extractFirstParagraph(content || ''),
       tags: [],
     });
   }
@@ -76,7 +100,7 @@ export default class Parser {
   public static async extractContentFromUrl(dirtyUrl: string): Promise<string> {
     const url = utils.normalizeUrl(dirtyUrl);
     const html = utils.sanitizeHtml(await this.getWebpageHtml(url));
-    const { content }: ParseResult = await Mercury.parse(url, {
+    const { content }: Mercury.ParseResult = await Mercury.parse(url, {
       html: Buffer.from(html, 'utf-8'),
     });
 
@@ -91,7 +115,7 @@ export default class Parser {
   }
 
   private static extractTitleTagText(html: string): string | null {
-    const title = new JSDOM(html).window.document.head.querySelector('title');
+    const title = JSDOM.fragment(html).querySelector('title');
 
     return title ? title.textContent || striptags(title.innerHTML) : null;
   }
@@ -100,7 +124,28 @@ export default class Parser {
     return (await axios.get(url)).data;
   }
 
-  private static removeExtra(str: string): string {
-    return utils.removeExtraSpaces(utils.removeExtraLines(str));
+  private static async uploadToCloudinary({
+    url,
+    folder,
+    filename,
+  }: {
+    url: string | null;
+    folder: string;
+    filename?: string;
+  }): Promise<string | null> {
+    if (url === null) return null;
+
+    try {
+      const response = await cloudinary.uploader.upload(url, {
+        public_id: filename,
+        folder,
+      });
+
+      return response.secure_url;
+    } catch (error) {
+      console.log(error);
+
+      return null;
+    }
   }
 }

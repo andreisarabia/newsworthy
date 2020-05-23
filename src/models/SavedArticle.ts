@@ -4,8 +4,10 @@ import { v4 as uuidv4 } from 'uuid';
 import Model from './Model';
 import Parser from '../Parser';
 import { toUniqueArray } from '../util/fns';
+import coudinary from '../services/cloudinary';
 
 import * as types from '../typings';
+import cloudinary from '../services/cloudinary';
 
 export default class SavedArticle extends Model<types.NewsArticleProps> {
   protected static readonly collectionName = 'saved_articles';
@@ -20,6 +22,18 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
 
   private get url(): string {
     return this.props.url;
+  }
+
+  private get urlToImage(): string | null | undefined {
+    return this.props.urlToImage;
+  }
+
+  private get cloudinaryImageId(): string | null {
+    const url = this.urlToImage;
+
+    return url
+      ? url.slice(url.lastIndexOf('/') + 1, url.lastIndexOf('.'))
+      : null;
   }
 
   public get content(): string | null {
@@ -83,5 +97,30 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
     const data: types.NewsArticleProps = await Parser.extractUrlData(url);
 
     return new SavedArticle(data).save();
+  }
+
+  public static async dropCollection(): Promise<boolean> {
+    try {
+      const articles = await this.findAll({});
+
+      await Promise.all([
+        this.deleteImageData(
+          articles.flatMap(article => article.cloudinaryImageId || [])
+        ),
+        this.collection.drop(),
+      ]);
+
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private static async deleteImageData(imageIds: string[]): Promise<void> {
+    for (let i = 0; i < imageIds.length; i += 20) {
+      await Promise.all(
+        imageIds.slice(i, i + 20).map(url => cloudinary.uploader.destroy(url))
+      );
+    }
   }
 }

@@ -1,29 +1,6 @@
 import React from 'react';
 
-import styled from 'styled-components';
-
-const SidebarSection = styled.section`
-  ul {
-    margin-left: 1rem;
-
-    li {
-      display: flex;
-      align-items: center;
-      font-family: Arial, sans-serif;
-      padding: 1rem;
-      margin: 0.5rem;
-
-      h3 {
-        margin: 0.1rem 1rem;
-      }
-
-      #current {
-        background: #573b3b !important;
-        border-radius: 0.4rem;
-      }
-    }
-  }
-`;
+import SidebarSection from '../styles/SidebarSection';
 
 export default class Sidebar extends React.Component {
   render() {

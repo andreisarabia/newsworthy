@@ -1,4 +1,5 @@
 import http from 'http';
+import { promises as fs } from 'fs';
 
 import Koa from 'koa';
 import koaBody from 'koa-bodyparser';
@@ -11,6 +12,7 @@ import Database from './Database';
 import Config from './Config';
 import { timestamp } from './util/time';
 import { isUrl } from './util/url';
+import cloudinary from './services/cloudinary';
 
 type ContentSecurityPolicy = {
   [k: string]: string[];
@@ -28,7 +30,7 @@ export default class Application {
     'default-src': ['self'],
     'script-src': ['self', 'unsafe-inline', 'unsafe-eval'],
     'style-src': ['self', 'unsafe-inline'],
-    'img-src': ['self'],
+    'img-src': ['self', 'https://res.cloudinary.com'],
   });
   private clientApp = nextApp({ dir: './client', dev: isDev });
   private pathMap = new Map<string, string[]>();

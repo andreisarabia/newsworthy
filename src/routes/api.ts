@@ -120,7 +120,7 @@ export default new KoaRouter({ prefix: '/api/article' })
   .get('/list', findArticles)
   .get('/sources', sendArticleSources)
   .get('/reset-all', async ctx => {
-    ctx.throw(500, new Error('Forbidden URL.'));
+    // ctx.throw(500, new Error('Forbidden URL.'));
 
     if (!IS_DEV) ctx.throw(500, new Error('Forbidden URL.'));
 

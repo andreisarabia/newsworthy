@@ -1,0 +1,80 @@
+@import url('all.css');
+
+@font-face {
+  font-family: 'Latin Modern';
+  font-style: normal;
+  font-weight: normal;
+  font-display: swap;
+  src: url('../fonts/LM-regular.woff2') format('woff2'),
+    url('../fonts/LM-regular.woff') format('woff'),
+    url('../fonts/LM-regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Latin Modern';
+  font-style: italic;
+  font-weight: normal;
+  font-display: swap;
+  src: url('../fonts/LM-italic.woff2') format('woff2'),
+    url('../fonts/LM-italic.woff') format('woff'),
+    url('../fonts/LM-italic.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Latin Modern';
+  font-style: normal;
+  font-weight: bold;
+  font-display: swap;
+  src: url('../fonts/LM-bold.woff2') format('woff2'),
+    url('../fonts/LM-bold.woff') format('woff'),
+    url('../fonts/LM-bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Latin Modern';
+  font-style: italic;
+  font-weight: bold;
+  font-display: swap;
+  src: url('../fonts/LM-bold-italic.woff2') format('woff2'),
+    url('../fonts/LM-bold-italic.woff') format('woff'),
+    url('../fonts/LM-bold-italic.ttf') format('truetype');
+}
+
+body {
+  font-family: 'Latin Modern', Helvetica, sans-serif;
+  margin: 0;
+  background: #1a1a1a;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body,
+html {
+  color: #8c6894;
+  font-size: 1rem;
+}
+
+body > div {
+  height: 100%;
+}
+
+ul {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+a:hover,
+span.fas:hover,
+li:hover * {
+  color: #53a9d2 !important;
+}

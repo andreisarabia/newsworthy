@@ -2,7 +2,7 @@ build
 
 client/.next
 
-client/public
+client/public/fonts
 
 config.json
 
