@@ -6,7 +6,9 @@ export default class Cache<T extends { [key: string]: any }> {
   private keyValueMap = new Map<string, T>();
   private lastAddedToCache: Date = new Date();
 
-  public constructor(private options: CacheOptions = { maxSize: 50 }) {}
+  public constructor(private options: CacheOptions = { maxSize: 50 }) {
+    console.log(this.lastAddedToCache);
+  }
 
   private updateLastAddedToCache() {
     this.lastAddedToCache = new Date();

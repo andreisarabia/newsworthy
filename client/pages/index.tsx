@@ -17,7 +17,7 @@ const AppContainer = styled.div`
 export default class Home extends React.Component<{}, SavedArticleState> {
   state = { list: [] };
 
-  async componentDidMount() {
+  async componentDidMount(): Promise<void> {
     try {
       const { data } = await axios.get('/api/article/list');
 
@@ -27,10 +27,22 @@ export default class Home extends React.Component<{}, SavedArticleState> {
     }
   }
 
+  async addToList(url: string): Promise<void> {
+    try {
+      const {
+        data: { article },
+      } = await axios.post('/api/article/save', { url });
+
+      this.setState(state => ({ list: [...state.list, article] }));
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   render() {
     return (
       <>
-        <Header />
+        <Header onAddLink={article => this.addToList(article)} />
         <AppContainer id='app-container'>
           <Sidebar />
           <App list={this.state.list} />

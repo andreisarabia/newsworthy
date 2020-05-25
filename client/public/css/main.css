@@ -72,9 +72,3 @@ a {
   text-decoration: none;
   color: inherit;
 }
-
-a:hover,
-span.fas:hover,
-li:hover * {
-  color: #53a9d2 !important;
-}

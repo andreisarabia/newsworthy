@@ -1,5 +1,4 @@
 import http from 'http';
-import { promises as fs } from 'fs';
 
 import Koa from 'koa';
 import koaBody from 'koa-bodyparser';
@@ -12,7 +11,6 @@ import Database from './Database';
 import Config from './Config';
 import { timestamp } from './util/time';
 import { isUrl } from './util/url';
-import cloudinary from './services/cloudinary';
 
 type ContentSecurityPolicy = {
   [k: string]: string[];

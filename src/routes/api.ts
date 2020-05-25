@@ -11,7 +11,6 @@ import { isAlphanumeric, isUrl } from '../util';
 import * as types from '../typings';
 
 const IS_DEV = Config.get('env') === 'dev';
-const { log } = console;
 
 export const articlesCache = new Cache<types.ArticleApiData>({
   maxSize: 5000,
@@ -111,6 +110,24 @@ const sendArticleSources = async (ctx: Koa.ParameterizedContext) => {
   ctx.body = { count: sources.length, sources };
 };
 
+const deleteArticleData = async (ctx: Koa.ParameterizedContext) => {
+  const { uniqueId } = ctx.params as { uniqueId: string };
+  const successful = await SavedArticle.delete(uniqueId);
+
+  ctx.body = { wasSuccessful: successful };
+};
+
+const resetAppData = async (ctx: Koa.ParameterizedContext) => {
+  if (!IS_DEV) ctx.throw(500, new Error('Forbidden URL.'));
+
+  await Promise.all([
+    SavedArticle.dropCollection(),
+    ArticleSource.dropCollection(),
+  ]);
+
+  ctx.body = 'ok';
+};
+
 export default new KoaRouter({ prefix: '/api/article' })
   .post('/news/top-headlines', sendTopHeadlines)
   .post('/news/everything', sendEverything)
@@ -119,15 +136,5 @@ export default new KoaRouter({ prefix: '/api/article' })
   .post('/add-tags', addTagsToArticle)
   .get('/list', findArticles)
   .get('/sources', sendArticleSources)
-  .get('/reset-all', async ctx => {
-    // ctx.throw(500, new Error('Forbidden URL.'));
-
-    if (!IS_DEV) ctx.throw(500, new Error('Forbidden URL.'));
-
-    await Promise.all([
-      SavedArticle.dropCollection(),
-      ArticleSource.dropCollection(),
-    ]);
-
-    ctx.body = 'ok';
-  });
+  .delete('/:uniqueId', deleteArticleData)
+  .get('/reset-all', resetAppData);

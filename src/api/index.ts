@@ -8,8 +8,6 @@ import Parser from '../Parser';
 
 import * as types from '../typings';
 
-const { log } = console;
-
 // https://newsapi.org/docs/endpoints
 const api = axios.create({
   baseURL: 'https://newsapi.org/v2',

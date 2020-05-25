@@ -1,8 +1,6 @@
 import styled from 'styled-components';
 
 const SidebarSection = styled.section`
-  font-family: Helvetica, sans-serif;
-
   ul {
     margin-left: 1rem;
 
@@ -11,10 +9,14 @@ const SidebarSection = styled.section`
       align-items: center;
       padding: 1rem;
       margin: 0.5rem;
+      :hover {
+        color: whitesmoke;
+      }
 
       h3 {
         margin: 0.1rem 1rem;
         font-weight: 100;
+        font-size: 1.3rem;
       }
 
       #current {

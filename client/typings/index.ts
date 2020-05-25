@@ -1,4 +1,5 @@
-interface SavedArticle {
+export interface SavedArticle {
+  uniqueId: string;
   author: string;
   title: string;
   description: string;

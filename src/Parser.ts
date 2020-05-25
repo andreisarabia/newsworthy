@@ -31,6 +31,7 @@ export default class Parser {
       'article:modified_time'
     );
     const domain = utils.extractDomain(url);
+    const folder = domain;
     const slug = utils.extractSlug(url);
     const filename = `${slug}-${Date.now()}`;
 
@@ -38,7 +39,7 @@ export default class Parser {
       meta['og:image'] || meta['twitter:image'] || null;
 
     const [imageUrl, parseResult, articleSrc] = await Promise.all([
-      this.uploadToCloudinary({ url: urlToImage, folder: domain, filename }),
+      this.uploadToCloudinary({ url: urlToImage, folder, filename }),
       Mercury.parse(url, { html: Buffer.from(html) }),
       ArticleSource.findOne({ url: new URL(url).origin }),
     ]);
@@ -50,7 +51,7 @@ export default class Parser {
     if (!urlToImage && lead_image_url)
       urlToImage = await this.uploadToCloudinary({
         url: lead_image_url,
-        folder: domain,
+        folder,
         filename,
       });
 
@@ -111,7 +112,7 @@ export default class Parser {
   private static extractFirstParagraph(snippet: string): string {
     const p = JSDOM.fragment(snippet).querySelector('p');
 
-    return p ? striptags(p.innerText || p.innerHTML) : '';
+    return p ? p.innerText || striptags(p.innerHTML) : '';
   }
 
   private static extractTitleTagText(html: string): string | null {
@@ -143,7 +144,7 @@ export default class Parser {
 
       return response.secure_url;
     } catch (error) {
-      console.log(error);
+      console.error(error);
 
       return null;
     }

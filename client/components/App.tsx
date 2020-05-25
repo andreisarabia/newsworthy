@@ -12,20 +12,25 @@ export default class App extends React.Component<SavedArticleProps, {}> {
   render() {
     return (
       <ApplicationView>
-        <h2>Home</h2>
         <section id='saved-articles'>
           {this.props.list.map(article => (
-            <div key={article.url} className='saved-article'>
+            <div key={article.uniqueId} className='saved-article'>
               <div>
                 <img src={article.urlToImage || ''} alt='' />
               </div>
               <div>
                 <h3>{article.title}</h3>
+                <h4>
+                  {article.description.length > 135
+                    ? `${article.description.slice(0, 135)}...`
+                    : article.description}
+                </h4>
                 <span className='article-meta'>
                   <a
                     className='meta-link'
-                    href={article.domain}
+                    href={`https://${article.domain}`}
                     target='_blank'
+                    rel='noreferrer'
                   >
                     {article.source.name || article.domain}
                   </a>

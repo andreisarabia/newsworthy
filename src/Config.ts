@@ -1,4 +1,4 @@
-import fs from 'fs';
+import configJSON from './config.json';
 
 type ConfigFile = {
   newsApiKey: string;
@@ -12,7 +12,7 @@ type ConfigFile = {
 
 export default class Config {
   private static readonly settings: ConfigFile = {
-    ...JSON.parse(fs.readFileSync('config.json', 'utf-8')),
+    ...configJSON,
     env: process.env.NODE_ENV !== 'production' ? 'dev' : 'prod',
   };
 

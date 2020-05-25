@@ -1,33 +1,44 @@
 import React from 'react';
 import Link from 'next/link';
-import axios from 'axios';
 
 import Navbar from '../styles/Navbar';
+
+interface HeaderProps extends React.Props<any> {
+  onAddLink?: (url: string) => Promise<void>;
+}
 
 interface HeaderState {
   showSearchArticleInput: boolean;
   showAddLinkInput: boolean;
   linkToAdd: string;
+  pathname: string | null;
 }
 
-export default class Header extends React.Component<{}, HeaderState> {
+export default class Header extends React.Component<HeaderProps, HeaderState> {
   state = {
     showSearchArticleInput: false,
     showAddLinkInput: false,
     linkToAdd: '',
+    pathname: null,
   };
+
+  componentDidMount() {
+    this.setState({ pathname: window.location.pathname });
+  }
+
+  reset() {
+    this.setState({
+      showAddLinkInput: false,
+      showSearchArticleInput: false,
+      linkToAdd: '',
+    });
+  }
 
   async addLink() {
     try {
-      const { data } = await axios.post('/api/article/save', {
-        url: this.state.linkToAdd,
-      });
-
-      console.log(data);
-    } catch (error) {
-      console.log(error, new Date());
+      await this.props.onAddLink(this.state.linkToAdd);
     } finally {
-      this.setState({ linkToAdd: '' });
+      this.reset();
     }
   }
 
@@ -58,6 +69,10 @@ export default class Header extends React.Component<{}, HeaderState> {
     const addLinkStyle = {
       display: this.state.showAddLinkInput ? 'initial' : 'none',
     };
+    const borderBottomStyle = {
+      borderBottom: '2px solid #53a9d2',
+      color: 'whitesmoke',
+    };
 
     return (
       <Navbar>
@@ -74,17 +89,25 @@ export default class Header extends React.Component<{}, HeaderState> {
         </div>
         <div id='navigation-options'>
           <ul style={navLinkStyles}>
-            <li>
+            <li style={this.state.pathname === '/' ? borderBottomStyle : {}}>
               <Link href='/'>
                 <a className='nav-link'>Home</a>
               </Link>
             </li>
-            <li>
+            <li
+              style={
+                this.state.pathname === '/headlines' ? borderBottomStyle : {}
+              }
+            >
               <Link href='/headlines'>
                 <a className='nav-link'>Headlines</a>
               </Link>
             </li>
-            <li>
+            <li
+              style={
+                this.state.pathname === '/sources' ? borderBottomStyle : {}
+              }
+            >
               <Link href='/sources'>
                 <a className='nav-link'>Sources</a>
               </Link>

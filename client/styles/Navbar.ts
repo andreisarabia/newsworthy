@@ -24,7 +24,6 @@ const Navbar = styled.header`
       padding: 1rem;
       font-size: 1.3rem;
       :hover {
-        color: whitesmoke;
         cursor: pointer;
       }
     }
@@ -35,7 +34,12 @@ const Navbar = styled.header`
       display: flex;
 
       > li {
-        margin: 0.5rem 1rem;
+        margin: 0.5rem 2rem;
+        padding: 0.5rem;
+        :hover {
+          color: whitesmoke;
+          border-bottom: 1px solid #53a9d2;
+        }
       }
       a.nav-link {
         font-size: 1.2rem;

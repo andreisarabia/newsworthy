@@ -11,7 +11,7 @@ export default abstract class Model<T extends types.MongoModelProps> {
 
   abstract async save(): Promise<this>;
 
-  public get data(): Omit<T, '_id'> {
+  public get data(): Readonly<Omit<T, '_id'>> {
     const { _id, ...publicData } = this.props;
 
     return Object.freeze(publicData);
