@@ -41,7 +41,12 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
     if (!url) return null;
 
     const folder = this.domain;
-    const filename = url.slice(url.lastIndexOf('/'), url.lastIndexOf('.'));
+    const lastFwdSlashIdx = url.lastIndexOf('/') + 1;
+    const lastPeriodIdx = url.lastIndexOf('.');
+    const filename =
+      lastPeriodIdx > lastFwdSlashIdx
+        ? url.slice(lastFwdSlashIdx, lastPeriodIdx)
+        : url.slice(lastFwdSlashIdx);
 
     return `${folder}/${filename}`;
   }
