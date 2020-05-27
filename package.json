@@ -33,7 +33,7 @@
     "react-dom": "^16.13.1",
     "sass": "^1.26.5",
     "striptags": "^3.1.1",
-    "styled-components": "^5.1.0",
+    "styled-components": "^5.1.1",
     "uuid": "^7.0.3"
   },
   "devDependencies": {

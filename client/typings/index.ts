@@ -5,14 +5,14 @@ export interface SavedArticle {
   description: string;
   url: string;
   urlToImage?: string | null;
-  publishedAt: Date;
+  publishedAt: string;
   content: string | null;
   wordCount: number;
   domain: string;
   canonical: string;
   slug: string;
   sizeInBytes: number;
-  createdAt: Date;
+  createdAt: string;
   tags: string[];
   source: {
     id: string | null;

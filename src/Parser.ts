@@ -76,6 +76,7 @@ export default class Parser {
       rest.title ||
       this.extractTitleTagText(html) ||
       url;
+    const author = meta['author'] || rest.author || '';
 
     return Object.freeze({
       url,
@@ -87,32 +88,33 @@ export default class Parser {
       description,
       sizeOfArticle,
       sizeOfArticlePage,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
       content: he.encode(content || ''),
-      publishedAt: new Date(publishedAt || Date.now()),
+      author: utils.properCase(author),
+      publishedAt: new Date(publishedAt || Date.now()).toUTCString(),
       canonical: utils.extractCanonicalUrl(html) || url,
       articleToPageSizeRatio: sizeOfArticle / sizeOfArticlePage,
-      author: utils.properCase(meta['author'] || rest.author || ''),
       wordCount: content ? utils.countWords(content) : rest.word_count,
       tags: [],
     });
   }
 
-  public static async extractContentFromUrl(dirtyUrl: string): Promise<string> {
+  public static async extractContentFromUrl(
+    dirtyUrl: string
+  ): Promise<string | null> {
     const url = utils.normalizeUrl(dirtyUrl);
     const html = utils.sanitizeHtml(await this.getWebpageHtml(url));
-    const { content }: Mercury.ParseResult = await Mercury.parse(url, {
+    const parsed: Mercury.ParseResult = await Mercury.parse(url, {
       html: Buffer.from(html, 'utf-8'),
     });
 
-    return content || '';
+    return parsed.content;
   }
 
-  // gets the first paragraph of a given HTML snippet
   private static extractFirstParagraph(snippet: string): string {
     const p = JSDOM.fragment(snippet).querySelector('p');
 
-    return p ? p.innerText || striptags(p.innerHTML) : '';
+    return p ? p.textContent || striptags(p.innerHTML) : '';
   }
 
   private static extractTitleTagText(html: string): string | null {
@@ -137,10 +139,8 @@ export default class Parser {
     if (url === null) return null;
 
     try {
-      const response = await cloudinary.uploader.upload(url, {
-        public_id: filename,
-        folder,
-      });
+      const options = { public_id: filename, folder };
+      const response = await cloudinary.uploader.upload(url, options);
 
       return response.secure_url;
     } catch (error) {

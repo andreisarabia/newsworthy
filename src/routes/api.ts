@@ -47,19 +47,22 @@ const sendSources = async (ctx: Koa.ParameterizedContext) => {
 };
 
 const saveArticle = async (ctx: Koa.ParameterizedContext) => {
-  const { url = '' } = ctx.request.body as { url: string };
+  const { url } = ctx.request.body as { url: string | undefined };
 
-  if (isUrl(url)) {
+  if (url && isUrl(url)) {
     const article = await SavedArticle.addNew(url);
 
-    ctx.body = { article: article.data };
-  } else {
-    ctx.status = 400;
-
-    ctx.body = {
-      msg: 'A provided article link is not valid. Please check your entry.',
-    };
+    if (article) {
+      ctx.body = { article: article.data };
+      return;
+    }
   }
+
+  ctx.status = 400;
+
+  ctx.body = {
+    msg: 'A provided article link is not valid. Please check your entry.',
+  };
 };
 
 const addTagsToArticle = async (ctx: Koa.ParameterizedContext) => {
@@ -75,11 +78,15 @@ const addTagsToArticle = async (ctx: Koa.ParameterizedContext) => {
     'Some tags provided were invalid. Please check all are alphanumeric.'
   );
 
-  const article = (await SavedArticle.findOne({ url }))!;
+  const article = await SavedArticle.findOne({ url });
 
-  await article.addTags(tags).save();
+  if (article) {
+    await article.addTags(tags).save();
 
-  ctx.body = { tags: article.tags };
+    ctx.body = { tags: article.tags };
+  } else {
+    ctx.body = { msg: 'Failed to add tags for the provided url.' };
+  }
 };
 
 const findArticles = async (ctx: Koa.ParameterizedContext) => {

@@ -6,8 +6,11 @@ import * as types from '../typings';
 
 export default abstract class Model<T extends types.MongoModelProps> {
   protected static readonly collectionName: string;
+  protected props: T;
 
-  protected constructor(protected props: T) {}
+  protected constructor(props: T) {
+    this.props = { ...props };
+  }
 
   abstract async save(): Promise<this>;
 
@@ -22,7 +25,9 @@ export default abstract class Model<T extends types.MongoModelProps> {
       await this.collection.drop();
 
       return true;
-    } catch {
+    } catch (err) {
+      console.error(err);
+
       return false;
     }
   }

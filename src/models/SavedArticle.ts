@@ -11,7 +11,7 @@ import cloudinary from '../services/cloudinary';
 export default class SavedArticle extends Model<types.NewsArticleProps> {
   protected static readonly collectionName = 'saved_articles';
 
-  private constructor(protected props: types.NewsArticleProps) {
+  private constructor(props: types.NewsArticleProps) {
     super(props);
   }
 
@@ -102,38 +102,42 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
     return results.map(resultData => new SavedArticle(resultData));
   }
 
+  public static async addNew(url: string): Promise<SavedArticle | null> {
+    try {
+      const data: types.NewsArticleProps = await Parser.extractUrlData(url);
+
+      return new SavedArticle(data).save();
+    } catch (error) {
+      console.error(error);
+
+      return null;
+    }
+  }
+
   public static async delete(uniqueId: string): Promise<boolean> {
     try {
-      const article = await this.findOne(
-        { uniqueId },
-        { projection: { domain: 1, urlToImage: 1 } }
-      );
+      const options = { projection: { domain: 1, urlToImage: 1 } };
+      const article = await this.findOne({ uniqueId }, options);
 
       if (!article) return false;
 
-      let result: mongodb.DeleteWriteOpResultObject;
+      let result: { ok?: number }; // 1 if correctly executed, 0 otherwise
 
       if (article.cloudinaryImageId) {
-        [, result] = await Promise.all([
+        [, { result }] = await Promise.all([
           cloudinary.uploader.destroy(article.cloudinaryImageId),
           super.collection.deleteOne({ uniqueId }),
         ]);
       } else {
-        result = await super.collection.deleteOne({ uniqueId });
+        ({ result } = await super.collection.deleteOne({ uniqueId }));
       }
 
-      return result.result.ok === 1;
+      return result.ok === 1;
     } catch (error) {
       console.error(error);
 
       return false;
     }
-  }
-
-  public static async addNew(url: string): Promise<SavedArticle> {
-    const data: types.NewsArticleProps = await Parser.extractUrlData(url);
-
-    return new SavedArticle({ ...data }).save();
   }
 
   public static async dropCollection(): Promise<boolean> {
@@ -150,7 +154,7 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
 
       return true;
     } catch (err) {
-      console.log(err);
+      console.error(err);
 
       return false;
     }

@@ -7,11 +7,9 @@ import * as types from '../typings';
 export default class ArticleSource extends Model<types.ArticleSourceProps> {
   protected static readonly collectionName = 'article_sources';
 
-  private constructor(protected props: types.ArticleSourceProps) {
+  private constructor(props: types.ArticleSourceProps) {
     super(props);
-
-    if (this.props.name === '')
-      this.props.name = new URL(this.props.url).hostname;
+    this.props.name = this.props.name || new URL(this.props.url).hostname;
   }
 
   private get url() {
@@ -27,10 +25,14 @@ export default class ArticleSource extends Model<types.ArticleSourceProps> {
   }
 
   public async save(): Promise<this> {
+    const searchFilter = { url: this.url };
+    const replacement = this.data;
+    const options = { upsert: true };
+
     await ArticleSource.collection.findOneAndReplace(
-      { url: this.url },
-      this.data,
-      { upsert: true }
+      searchFilter,
+      replacement,
+      options
     );
 
     return this;

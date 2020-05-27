@@ -2,7 +2,6 @@ import qs from 'querystring';
 
 import axios, { AxiosResponse } from 'axios';
 
-import ArticleSource from '../models/ArticleSource';
 import Config from '../Config';
 import Parser from '../Parser';
 
@@ -16,14 +15,6 @@ const api = axios.create({
   },
 });
 
-const queryApi = (
-  uri: string,
-  params?: types.ApiRequest
-): Promise<AxiosResponse<any>> => {
-  if (params) uri += `?${qs.stringify({ ...params })}`;
-  return api.get(uri);
-};
-
 const populateEmptyContent = (
   articles: types.ArticleApiData[]
 ): Promise<types.ArticleApiData[]> =>
@@ -36,6 +27,21 @@ const populateEmptyContent = (
     })
   );
 
+const queryApi = async (
+  uri: '/top-headlines' | '/everything' | '/sources',
+  params?: types.ApiRequest
+): Promise<AxiosResponse<any>> => {
+  const url = params ? `${uri}?${qs.stringify({ ...params })}` : uri;
+  const response = await api.get(url);
+
+  if (uri === '/top-headlines' || uri === '/everything')
+    response.data.articles = await populateEmptyContent(
+      response.data.articles as types.ArticleApiData[]
+    );
+
+  return response;
+};
+
 /**
  * Provides live top and breaking headlines for a country,
  * specific category in a country, single source, or multiple
@@ -43,27 +49,13 @@ const populateEmptyContent = (
  */
 export const topHeadlines = async (
   params?: types.NewsApiHeadlineRequest
-): Promise<types.NewsApiHeadlineResponse> => {
-  const { data }: { data: types.NewsApiHeadlineResponse } = await queryApi(
-    '/top-headlines',
-    params
-  );
-  const articles = await populateEmptyContent(data.articles);
-
-  return { ...data, articles };
-};
+): Promise<types.NewsApiHeadlineResponse> =>
+  (await queryApi('/top-headlines', params)).data;
 
 export const everything = async (
   params?: types.NewsApiEverythingRequest
-): Promise<types.NewsApiEverythingResponse> => {
-  const { data }: { data: types.NewsApiEverythingResponse } = await queryApi(
-    '/everything',
-    params
-  );
-  const articles = await populateEmptyContent(data.articles);
-
-  return { ...data, articles };
-};
+): Promise<types.NewsApiEverythingResponse> =>
+  (await queryApi('/everything', params)).data;
 
 /**
  * Returns the subset of news publishers that top headlines
@@ -71,13 +63,5 @@ export const everything = async (
  */
 export const sources = async (
   params?: types.NewsApiSourcesRequest
-): Promise<types.NewsApiSourcesResponse> => {
-  const { data }: { data: types.NewsApiSourcesResponse } = await queryApi(
-    '/sources',
-    params
-  );
-
-  ArticleSource.saveAll(data.sources);
-
-  return data;
-};
+): Promise<types.NewsApiSourcesResponse> =>
+  (await queryApi('/sources', params)).data;
