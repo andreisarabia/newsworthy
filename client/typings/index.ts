@@ -23,3 +23,5 @@ export interface SavedArticle {
 export interface SavedArticleProps {
   list: SavedArticle[];
 }
+
+export interface SavedArticleState extends SavedArticleProps {}

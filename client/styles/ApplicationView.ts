@@ -1,9 +1,11 @@
 import styled from 'styled-components';
 
 const ApplicationView = styled.main`
+  margin: 2rem;
+
   > section#saved-articles {
     display: grid;
-    grid-template-columns: repeat(3, auto);
+    grid-template-columns: repeat(3, 1fr);
     width: 90%;
     color: whitesmoke;
 

@@ -6,7 +6,7 @@ import Header from '../components/Header';
 import App from '../components/App';
 import Sidebar from '../components/Sidebar';
 
-import { SavedArticle, SavedArticleProps } from '../typings';
+import { SavedArticle, SavedArticleState } from '../typings';
 
 const AppContainer = styled.div`
   display: flex;
@@ -14,21 +14,21 @@ const AppContainer = styled.div`
 
 const sortByDate = (a: Date, b: Date) => b.getTime() - a.getTime();
 
-export async function getStaticProps() {
-  const {
-    data: { articles },
-  } = await axios.get(`http://localhost:3000/api/article/list`);
+export default class Home extends React.Component<{}, SavedArticleState> {
+  state = {
+    list: [],
+  };
 
-  (articles as SavedArticle[]).sort((a, b) =>
-    sortByDate(new Date(a.createdAt), new Date(b.createdAt))
-  );
+  async componentDidMount() {
+    const {
+      data: { articles },
+    } = await axios.get(`http://localhost:3000/api/article/list`);
 
-  return { props: { list: articles } };
-}
+    (articles as SavedArticle[]).sort((a, b) =>
+      sortByDate(new Date(a.createdAt), new Date(b.createdAt))
+    );
 
-export default class Home extends React.Component<SavedArticleProps> {
-  constructor(props) {
-    super(props);
+    this.setState({ list: articles });
   }
 
   async addToList(url: string): Promise<void> {
@@ -37,9 +37,9 @@ export default class Home extends React.Component<SavedArticleProps> {
         data: { article },
       } = await axios.post('/api/article/save', { url });
 
-      this.props.list.unshift(article);
+      this.setState(state => ({ list: [...state.list, article] }));
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 
@@ -49,7 +49,7 @@ export default class Home extends React.Component<SavedArticleProps> {
         <Header onAddLink={link => this.addToList(link)} />
         <AppContainer id='app-container'>
           <Sidebar />
-          <App list={this.props.list} />
+          <App list={this.state.list} />
         </AppContainer>
       </>
     );
