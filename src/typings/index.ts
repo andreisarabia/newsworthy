@@ -26,7 +26,7 @@ export interface ArticleApiData {
   description: string;
   url: string;
   urlToImage?: string | null;
-  publishedAt: Date;
+  publishedAt: string;
   content: string | null;
   wordCount: number;
 }
@@ -38,7 +38,7 @@ export interface NewsArticleProps extends MongoModelProps, ArticleApiData {
   sizeOfArticlePage: number;
   sizeOfArticle: number;
   articleToPageSizeRatio: number;
-  createdAt: Date;
+  createdAt: string;
   tags: string[];
 }
 

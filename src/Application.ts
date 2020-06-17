@@ -28,7 +28,7 @@ export default class Application {
     'default-src': ['self'],
     'script-src': ['self', 'unsafe-inline', 'unsafe-eval'],
     'style-src': ['self', 'unsafe-inline'],
-    'img-src': ['self'],
+    'img-src': ['self', 'https://res.cloudinary.com'],
   });
   private clientApp = nextApp({ dir: './client', dev: isDev });
   private pathMap = new Map<string, string[]>();

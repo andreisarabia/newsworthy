@@ -11,7 +11,6 @@ import { isAlphanumeric, isUrl } from '../util';
 import * as types from '../typings';
 
 const IS_DEV = Config.get('env') === 'dev';
-const { log } = console;
 
 export const articlesCache = new Cache<types.ArticleApiData>({
   maxSize: 5000,
@@ -48,19 +47,22 @@ const sendSources = async (ctx: Koa.ParameterizedContext) => {
 };
 
 const saveArticle = async (ctx: Koa.ParameterizedContext) => {
-  const { url = '' } = ctx.request.body as { url: string };
+  const { url } = ctx.request.body as { url: string | undefined };
 
-  if (isUrl(url)) {
+  if (url && isUrl(url)) {
     const article = await SavedArticle.addNew(url);
 
-    ctx.body = { article: article.data };
-  } else {
-    ctx.status = 400;
-
-    ctx.body = {
-      msg: 'A provided article link is not valid. Please check your entry.',
-    };
+    if (article) {
+      ctx.body = { article: article.data };
+      return;
+    }
   }
+
+  ctx.status = 400;
+
+  ctx.body = {
+    msg: 'A provided article link is not valid. Please check your entry.',
+  };
 };
 
 const addTagsToArticle = async (ctx: Koa.ParameterizedContext) => {
@@ -76,11 +78,15 @@ const addTagsToArticle = async (ctx: Koa.ParameterizedContext) => {
     'Some tags provided were invalid. Please check all are alphanumeric.'
   );
 
-  const article = (await SavedArticle.findOne({ url }))!;
+  const article = await SavedArticle.findOne({ url });
 
-  await article.addTags(tags).save();
+  if (article) {
+    await article.addTags(tags).save();
 
-  ctx.body = { tags: article.tags };
+    ctx.body = { tags: article.tags };
+  } else {
+    ctx.body = { msg: 'Failed to add tags for the provided url.' };
+  }
 };
 
 const findArticles = async (ctx: Koa.ParameterizedContext) => {
@@ -111,6 +117,24 @@ const sendArticleSources = async (ctx: Koa.ParameterizedContext) => {
   ctx.body = { count: sources.length, sources };
 };
 
+const deleteArticleData = async (ctx: Koa.ParameterizedContext) => {
+  const { uniqueId } = ctx.params as { uniqueId: string };
+  const successful = await SavedArticle.delete(uniqueId);
+
+  ctx.body = { wasSuccessful: successful };
+};
+
+const resetAppData = async (ctx: Koa.ParameterizedContext) => {
+  if (!IS_DEV) ctx.throw(500, new Error('Forbidden URL.'));
+
+  await Promise.all([
+    SavedArticle.dropCollection(),
+    ArticleSource.dropCollection(),
+  ]);
+
+  ctx.body = 'ok';
+};
+
 export default new KoaRouter({ prefix: '/api/article' })
   .post('/news/top-headlines', sendTopHeadlines)
   .post('/news/everything', sendEverything)
@@ -119,15 +143,5 @@ export default new KoaRouter({ prefix: '/api/article' })
   .post('/add-tags', addTagsToArticle)
   .get('/list', findArticles)
   .get('/sources', sendArticleSources)
-  .get('/reset-all', async ctx => {
-    ctx.throw(500, new Error('Forbidden URL.'));
-
-    if (!IS_DEV) ctx.throw(500, new Error('Forbidden URL.'));
-
-    await Promise.all([
-      SavedArticle.dropCollection(),
-      ArticleSource.dropCollection(),
-    ]);
-
-    ctx.body = 'ok';
-  });
+  .delete('/:uniqueId', deleteArticleData)
+  .get('/reset-all', resetAppData);

@@ -1,4 +1,4 @@
-import { FindOneOptions } from 'mongodb';
+import mongodb from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
 
 import Model from './Model';
@@ -6,20 +6,49 @@ import Parser from '../Parser';
 import { toUniqueArray } from '../util/fns';
 
 import * as types from '../typings';
+import cloudinary from '../services/cloudinary';
 
 export default class SavedArticle extends Model<types.NewsArticleProps> {
   protected static readonly collectionName = 'saved_articles';
 
-  private constructor(protected props: types.NewsArticleProps) {
+  private constructor(props: types.NewsArticleProps) {
     super(props);
   }
 
-  private get uniqueId(): string {
-    return this.props.uniqueId!;
+  private get uniqueId(): string | undefined {
+    return this.props.uniqueId;
+  }
+
+  private set uniqueId(value: string | undefined) {
+    this.props.uniqueId = value;
   }
 
   private get url(): string {
     return this.props.url;
+  }
+
+  private get urlToImage(): string | null | undefined {
+    return this.props.urlToImage;
+  }
+
+  private get domain(): string {
+    return this.props.domain;
+  }
+
+  private get cloudinaryImageId(): string | null {
+    const url = this.urlToImage;
+
+    if (!url) return null;
+
+    const folder = this.domain;
+    const lastFwdSlashIdx = url.lastIndexOf('/') + 1;
+    const lastPeriodIdx = url.lastIndexOf('.');
+    const filename =
+      lastPeriodIdx > lastFwdSlashIdx
+        ? url.slice(lastFwdSlashIdx, lastPeriodIdx)
+        : url.slice(lastFwdSlashIdx);
+
+    return `${folder}/${filename}`;
   }
 
   public get content(): string | null {
@@ -40,48 +69,107 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
   }
 
   public async save(): Promise<this> {
-    let criteria: Partial<types.NewsArticleProps>;
-    let data: types.NewsArticleProps;
+    this.uniqueId = this.uniqueId || uuidv4();
 
-    if (this.uniqueId) {
-      criteria = { uniqueId: this.uniqueId };
-      data = this.data;
-    } else {
-      criteria = { url: this.url };
-      data = { ...this.data, uniqueId: uuidv4() };
-    }
+    const searchFilter = { url: this.url };
+    const replacement = this.data;
+    const options = { upsert: true };
 
-    await SavedArticle.collection.findOneAndReplace(criteria, data, {
-      upsert: true,
-    });
+    await SavedArticle.collection.findOneAndReplace(
+      searchFilter,
+      replacement,
+      options
+    );
 
     return this;
   }
 
   public static async findOne(
-    criteria: Partial<types.NewsArticleProps>
+    criteria: Partial<types.NewsArticleProps>,
+    options?: mongodb.FindOneOptions
   ): Promise<SavedArticle | null> {
-    const articleData: types.NewsArticleProps | null = await super.collection.findOne(
-      criteria
-    );
+    const resultData = await super.collection.findOne(criteria, options);
 
-    return articleData ? new SavedArticle(articleData) : null;
+    return resultData ? new SavedArticle(resultData) : null;
   }
 
   public static async findAll(
-    criteria: Partial<types.NewsArticleProps>,
-    options: FindOneOptions = { limit: 100 }
+    criteria: Partial<types.NewsArticleProps> = {},
+    options: mongodb.FindOneOptions = { limit: 100 }
   ): Promise<SavedArticle[]> {
-    const results: types.NewsArticleProps[] = await super.collection
-      .find(criteria, options)
-      .toArray();
+    const results = await super.collection.find(criteria, options).toArray();
 
-    return results.map(data => new SavedArticle(data));
+    return results.map(resultData => new SavedArticle(resultData));
   }
 
-  public static async addNew(url: string): Promise<SavedArticle> {
-    const data: types.NewsArticleProps = await Parser.extractUrlData(url);
+  public static async addNew(url: string): Promise<SavedArticle | null> {
+    try {
+      const data: types.NewsArticleProps = await Parser.extractUrlData(url);
 
-    return new SavedArticle(data).save();
+      return new SavedArticle(data).save();
+    } catch (error) {
+      console.error(error);
+
+      return null;
+    }
+  }
+
+  public static async delete(uniqueId: string): Promise<boolean> {
+    try {
+      const options = { projection: { domain: 1, urlToImage: 1 } };
+      const article = await this.findOne({ uniqueId }, options);
+
+      if (!article) return false;
+
+      let result: { ok?: number }; // 1 if correctly executed, 0 otherwise
+
+      if (article.cloudinaryImageId) {
+        [, { result }] = await Promise.all([
+          cloudinary.uploader.destroy(article.cloudinaryImageId),
+          super.collection.deleteOne({ uniqueId }),
+        ]);
+      } else {
+        ({ result } = await super.collection.deleteOne({ uniqueId }));
+      }
+
+      return result.ok === 1;
+    } catch (error) {
+      console.error(error);
+
+      return false;
+    }
+  }
+
+  public static async dropCollection(): Promise<boolean> {
+    try {
+      const findOpts = { limit: 0, projection: { domain: 1, urlToImage: 1 } };
+      const imageIds = (await this.findAll({}, findOpts)).flatMap(
+        article => article.cloudinaryImageId || []
+      );
+
+      await Promise.all([
+        this.deleteImageData(imageIds),
+        super.dropCollection(),
+      ]);
+
+      return true;
+    } catch (err) {
+      console.error(err);
+
+      return false;
+    }
+  }
+
+  private static async deleteImageData(
+    imageIds: string[],
+    chunks: number = 20
+  ): Promise<void> {
+    chunks = chunks > imageIds.length ? imageIds.length : chunks;
+
+    for (let i = 0; i < imageIds.length; i += chunks) {
+      const idChunks = imageIds.slice(i, i + chunks);
+
+      await Promise.all(idChunks.map(id => cloudinary.uploader.destroy(id)));
+    }
   }
 }

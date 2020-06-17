@@ -4,17 +4,18 @@ type CacheOptions = {
 
 export default class Cache<T extends { [key: string]: any }> {
   private keyValueMap = new Map<string, T>();
-  private lastAddedToCache: Date = new Date();
 
-  public constructor(private options: CacheOptions = { maxSize: 50 }) {}
-
-  private updateLastAddedToCache() {
-    this.lastAddedToCache = new Date();
-  }
+  public constructor(private options: CacheOptions) {}
 
   private checkCache() {
-    if (this.keyValueMap.size > this.options.maxSize)
-      this.partiallyClearCache();
+    if (this.sizeInBytes > this.options.maxSize) this.partiallyClearCache();
+  }
+
+  private get sizeInBytes(): number {
+    const reducer = (acc: number, value: T): number =>
+      acc + Buffer.byteLength(JSON.stringify(value));
+
+    return [...this.keyValueMap.values()].reduce(reducer, 0);
   }
 
   private partiallyClearCache() {
@@ -32,22 +33,17 @@ export default class Cache<T extends { [key: string]: any }> {
     return this.keyValueMap.get(key);
   }
 
-  public set(key: string, value: T): this {
+  public set(key: string, value: T): void {
     this.checkCache();
     this.keyValueMap.set(key, value);
-    this.updateLastAddedToCache();
-
-    return this;
   }
 
-  public setAll(commonKey: string, values: T[]) {
+  public setAll(commonKey: string, values: T[]): void {
     this.checkCache();
 
     values.forEach(value => {
       this.keyValueMap.set(value[commonKey], value);
     });
-
-    this.updateLastAddedToCache();
   }
 
   public has(key: string): boolean {
