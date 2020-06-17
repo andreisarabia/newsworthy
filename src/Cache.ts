@@ -1,3 +1,5 @@
+import * as util from 'util';
+
 type CacheOptions = {
   maxSize: number;
 };
@@ -12,10 +14,14 @@ export default class Cache<T extends { [key: string]: any }> {
   }
 
   private get sizeInBytes(): number {
-    const reducer = (acc: number, value: T): number =>
-      acc + Buffer.byteLength(JSON.stringify(value));
+    return [...this.keyValueMap.values()].reduce(
+      (acc: number, value: T): number => {
+        const safelyStringified = util.inspect(value);
 
-    return [...this.keyValueMap.values()].reduce(reducer, 0);
+        return acc + Buffer.byteLength(safelyStringified);
+      },
+      0
+    );
   }
 
   private partiallyClearCache() {
