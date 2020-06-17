@@ -1,6 +1,6 @@
 import { v2 as _cloudinary } from 'cloudinary';
 
-import Config from '../Config';
+import Config from '../config';
 import { deepClone } from '../util';
 
 // cloudinary doesn't export this type for devs to use...
