@@ -56,16 +56,3 @@ export const COUNTRIES = Object.freeze(
     'za',
   ])
 );
-
-export const htmlEntityMap = Object.freeze({
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-  '/': '&#x2F;',
-  '`': '&#x60;',
-  '=': '&#x3D;',
-}) as { [key: string]: string };
-
-export const htmlEntityRegex = /[&<>"'`=\/]/g;

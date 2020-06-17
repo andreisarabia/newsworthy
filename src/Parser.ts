@@ -88,7 +88,7 @@ export default class Parser {
       description,
       sizeOfArticle,
       sizeOfArticlePage,
-      createdAt: new Date().toISOString(),
+      createdAt: utils.isoTimestamp(),
       content: he.encode(content || ''),
       author: utils.properCase(author),
       publishedAt: new Date(publishedAt || Date.now()).toUTCString(),

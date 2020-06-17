@@ -1,7 +1,7 @@
 import { MongoClient, Collection } from 'mongodb';
 
 import Cache from './Cache';
-import Config from './Config';
+import Config from './config';
 
 const ONE_MEG = 0;
 

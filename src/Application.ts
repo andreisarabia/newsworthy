@@ -8,7 +8,7 @@ import nextApp from 'next';
 import sessionLogger from './middlewares/sessionLogger';
 import apiRouter from './routes/api';
 import Database from './Database';
-import Config from './Config';
+import Config from './config';
 import { timestamp } from './util/time';
 import { isUrl } from './util/url';
 
@@ -128,13 +128,13 @@ export default class Application {
 
   public start(): void {
     this.koa.listen(this.port, () => {
-      console.log(
+      this.startupMessages.push(
         `[${timestamp()}]`,
-        `\nListening on port ${this.port}...\n`,
-        'API Paths: ',
-        this.pathMap,
-        `\n${this.startupMessages.join('\n')}`
+        `Listening on port ${this.port}...`
       );
+
+      console.log('API Paths: ', this.pathMap);
+      console.log(`${this.startupMessages.join('\n')}`);
     });
   }
 

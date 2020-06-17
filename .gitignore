@@ -2,8 +2,6 @@ build
 
 client/.next
 
-client/public/fonts
-
 config.json
 
 node_modules

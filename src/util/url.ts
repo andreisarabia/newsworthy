@@ -1,4 +1,4 @@
-const urlExtensions = ['.html', '.php', '.aspx'];
+const urlExtensions = ['.htm', '.html', '.php', '.aspx'];
 
 export const normalizeUrl = (url: string): string => {
   if (!isUrl(url))

@@ -5,7 +5,7 @@ import SavedArticle from '../models/SavedArticle';
 import ArticleSource from '../models/ArticleSource';
 import * as newsApi from '../api';
 import Cache from '../Cache';
-import Config from '../Config';
+import Config from '../config';
 import { isAlphanumeric, isUrl } from '../util';
 
 import * as types from '../typings';

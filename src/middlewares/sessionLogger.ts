@@ -2,7 +2,7 @@ import Koa from 'koa';
 import chalk from 'chalk';
 
 import { isoTimestamp } from '../util/time';
-import Config from '../Config';
+import Config from '../config';
 
 const FILE_TYPES = ['_next', '.ico', '.json', '.png', '.jpeg'];
 const IS_DEV = Config.get('env') === 'dev';
