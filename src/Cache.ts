@@ -2,12 +2,29 @@ import util from 'util';
 
 type CacheOptions = {
   maxSize?: number;
+  ratioToDelete?: number;
+};
+
+const cacheSizeReducer = <T>(acc: number, value: T): number => {
+  // we use `util.inspect` here to prevent crashing from
+  // circular references in objects of type T
+  const safelyStringified = util.inspect(value);
+  return acc + Buffer.byteLength(safelyStringified);
 };
 
 export default class Cache<T extends { [key: string]: any }> {
   private keyValueMap = new Map<string, T>();
 
-  public constructor(private options: CacheOptions = {}) {}
+  public constructor(private options: CacheOptions = {}) {
+    if (
+      options.ratioToDelete &&
+      (options.ratioToDelete >= 1 || options.ratioToDelete < 0)
+    ) {
+      throw new Error(
+        `Cannot create cache with ratio ${options.ratioToDelete}`
+      );
+    }
+  }
 
   private checkCache() {
     const { maxSize } = this.options;
@@ -16,16 +33,12 @@ export default class Cache<T extends { [key: string]: any }> {
   }
 
   private get sizeInBytes(): number {
-    const reducer = (acc: number, value: T): number => {
-      const safelyStringified = util.inspect(value);
-      return acc + Buffer.byteLength(safelyStringified);
-    };
-
-    return [...this.keyValueMap.values()].reduce(reducer, 0);
+    return [...this.keyValueMap.values()].reduce(cacheSizeReducer, 0);
   }
 
   private partiallyClearCache() {
-    let amountToDelete = Math.floor(this.options.maxSize! / 10);
+    const { maxSize, ratioToDelete = 1 / 10 } = this.options;
+    let amountToDelete = Math.floor(maxSize! * ratioToDelete);
     let counter = 0;
 
     for (const key of this.keyValueMap.keys()) {

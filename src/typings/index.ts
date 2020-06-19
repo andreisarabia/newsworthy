@@ -13,7 +13,7 @@ type NewsCategory =
 
 export interface MongoModelProps {
   _id?: ObjectId;
-  uniqueId?: string; // for clientside rendering
+  uniqueId?: string; // for clientside rendering (e.g. loops)
 }
 
 export interface ArticleApiData {
@@ -52,7 +52,9 @@ export interface ArticleSourceProps extends MongoModelProps {
   country: string;
 }
 
-export interface ApiRequest {}
+export interface ApiRequest {
+  [key: string]: any;
+}
 
 export interface NewsApiHeadlineRequest extends ApiRequest {
   country?: string;

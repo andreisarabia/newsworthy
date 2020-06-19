@@ -4,6 +4,9 @@ import Model from './Model';
 
 import * as types from '../typings';
 
+/**
+ * Represents sources from the News API.
+ */
 export default class ArticleSource extends Model<types.ArticleSourceProps> {
   protected static readonly collectionName = 'article_sources';
 

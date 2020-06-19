@@ -2,7 +2,7 @@ import configJSON from './config.json';
 
 type ConfigFile = {
   newsApiKey: string;
-  mongoUri: string;
+  mongoUri?: string;
   port?: number;
   cloudinaryCloudName?: string;
   cloudinaryApiKey?: string;
