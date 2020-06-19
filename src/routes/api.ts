@@ -11,9 +11,10 @@ import { isAlphanumeric, isUrl } from '../util';
 import * as types from '../typings';
 
 const IS_DEV = Config.get('env') === 'dev';
+const ONE_MEG = 1024 * 1024;
 
 export const articlesCache = new Cache<types.ArticleApiData>({
-  maxSize: 5000,
+  maxSize: ONE_MEG,
 });
 
 const defaultHeadlineParams = { country: 'us' };
