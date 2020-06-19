@@ -1,6 +1,6 @@
 # newsworthy
 
-newsworthy is a news article saver in a no-nonsense UI.
+newsworthy is a news article saver with a no-nonsense UI.
 
 # Features
 
