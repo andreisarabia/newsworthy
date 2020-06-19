@@ -3,10 +3,8 @@ import { MongoClient, Collection } from 'mongodb';
 import Cache from './Cache';
 import Config from './config';
 
-const ONE_MEG = 0;
-
 export default class Database {
-  private static cache = new Cache<Collection>({ maxSize: ONE_MEG });
+  private static cache = new Cache<Collection>();
   private static client: MongoClient;
 
   public static async initialize(): Promise<void> {

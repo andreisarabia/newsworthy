@@ -1,31 +1,31 @@
-import * as util from 'util';
+import util from 'util';
 
 type CacheOptions = {
-  maxSize: number;
+  maxSize?: number;
 };
 
 export default class Cache<T extends { [key: string]: any }> {
   private keyValueMap = new Map<string, T>();
 
-  public constructor(private options: CacheOptions) {}
+  public constructor(private options: CacheOptions = {}) {}
 
   private checkCache() {
-    if (this.sizeInBytes > this.options.maxSize) this.partiallyClearCache();
+    const { maxSize } = this.options;
+
+    if (maxSize && this.sizeInBytes > maxSize) this.partiallyClearCache();
   }
 
   private get sizeInBytes(): number {
-    return [...this.keyValueMap.values()].reduce(
-      (acc: number, value: T): number => {
-        const safelyStringified = util.inspect(value);
+    const reducer = (acc: number, value: T): number => {
+      const safelyStringified = util.inspect(value);
+      return acc + Buffer.byteLength(safelyStringified);
+    };
 
-        return acc + Buffer.byteLength(safelyStringified);
-      },
-      0
-    );
+    return [...this.keyValueMap.values()].reduce(reducer, 0);
   }
 
   private partiallyClearCache() {
-    let amountToDelete = Math.floor(this.options.maxSize / 10);
+    let amountToDelete = Math.floor(this.options.maxSize! / 10);
     let counter = 0;
 
     for (const key of this.keyValueMap.keys()) {

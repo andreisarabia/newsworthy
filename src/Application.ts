@@ -9,8 +9,7 @@ import sessionLogger from './middlewares/sessionLogger';
 import apiRouter from './routes/api';
 import Database from './Database';
 import Config from './config';
-import { timestamp } from './util/time';
-import { isUrl } from './util/url';
+import { timestamp, isUrl } from './util';
 
 type ContentSecurityPolicy = {
   [k: string]: string[];
@@ -40,7 +39,8 @@ export default class Application {
   }
 
   private get cspHeader(): string {
-    const srcDirectives = Object.entries(this.csp).map(([src, directives]) => {
+    const entries = Object.entries(this.csp);
+    const srcDirectives = entries.map(([src, directives]) => {
       const preppedDirectives = directives.map(directive =>
         isUrl(directive) ? directive : `'${directive}'`
       );
@@ -58,6 +58,7 @@ export default class Application {
       overwrite: true,
       signed: true,
       httpOnly: true,
+      // secure: true, // TODO: uncomment when production-ready (aka non-local)
       autoCommit: false,
     };
     const defaultHeaders = {
@@ -77,20 +78,19 @@ export default class Application {
       .use(apiRouter.routes())
       .use(apiRouter.allowedMethods())
       .on('error', (err, ctx) => {
-        console.error(
-          err instanceof Error ? err.stack || err.message : err,
-          ctx.url
-        );
+        err = err instanceof Error ? err.stack || err.message : err;
+
+        console.error(err, ctx.url);
       });
 
-    this.attachNuxtMiddleware();
+    this.attachNextMiddleware();
 
     apiRouter.stack.forEach(({ path, methods }) => {
       this.pathMap.set(path, methods);
     });
   }
 
-  private attachNuxtMiddleware() {
+  private attachNextMiddleware() {
     const clientAppHandler: (
       req: http.IncomingMessage,
       res: http.ServerResponse
@@ -104,7 +104,7 @@ export default class Application {
     });
   }
 
-  private async initializeNuxtApp() {
+  private async initializeNextApp() {
     const start = Date.now();
     if (shouldCompile) await this.clientApp.prepare();
     this.startupMessages.push(`${Date.now() - start}ms to start Next.js.`);
@@ -119,7 +119,7 @@ export default class Application {
   }
 
   public async setup(): Promise<this> {
-    await Promise.all([this.initializeNuxtApp(), this.initializeDatabase()]);
+    await Promise.all([this.initializeNextApp(), this.initializeDatabase()]);
 
     this.attachMiddlewares();
 
@@ -134,7 +134,7 @@ export default class Application {
       );
 
       console.log('API Paths: ', this.pathMap);
-      console.log(`${this.startupMessages.join('\n')}`);
+      console.log(this.startupMessages.join('\n'));
     });
   }
 

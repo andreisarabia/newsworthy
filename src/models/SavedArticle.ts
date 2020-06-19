@@ -3,10 +3,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 import Model from './Model';
 import Parser from '../Parser';
+import cloudinary from '../services/cloudinary';
 import { toUniqueArray } from '../util/fns';
 
 import * as types from '../typings';
-import cloudinary from '../services/cloudinary';
 
 export default class SavedArticle extends Model<types.NewsArticleProps> {
   protected static readonly collectionName = 'saved_articles';
