@@ -14,7 +14,7 @@ export default class Parser {
   public static async extractUrlData(
     dirtyUrl: string
   ): Promise<types.NewsArticleProps> {
-    const url = utils.normalizeUrl(dirtyUrl);
+    const url = utils.normalizeUrl(dirtyUrl); // just keep origin and pathname
     const dirtyHtml = await this.getWebpageHtml(url);
     const html = utils.sanitizeHtml(dirtyHtml);
     const meta = utils.extractMetaContent(
@@ -91,7 +91,7 @@ export default class Parser {
       createdAt: utils.isoTimestamp(),
       content: he.encode(content || ''),
       author: utils.properCase(author),
-      publishedAt: new Date(publishedAt || Date.now()).toUTCString(),
+      publishedAt: new Date(publishedAt || Date.now()).toISOString(),
       canonical: utils.extractCanonicalUrl(html) || url,
       articleToPageSizeRatio: sizeOfArticle / sizeOfArticlePage,
       wordCount: content ? utils.countWords(content) : rest.word_count,

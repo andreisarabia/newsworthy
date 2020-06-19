@@ -13,9 +13,10 @@ newsworthy is a news article saver with a no-nonsense UI.
 
 # Todo
 
-- Save lead image to filesystem (in case of Cloudinary failure)
 - Implement stream of recent news from [News API's](https://newsapi.org) (API prepped in `src/api/index.ts`)
-- Find way to remove `'unsafe-eval'` and `'unsafe-inline'` from current CSP (currently required for Next to work properly 😐)
+- Cache News API response data to consume fewer API requests
 - Add tag functionality to saved articles
+- Save lead image to filesystem (in case of Cloudinary failure)
 - Save articles for offline viewing
+- Find way to remove `'unsafe-eval'` and `'unsafe-inline'` from current CSP (currently required for Next to work properly 😐)
 - Add more database choices (MySQL, SQLite, etc.)

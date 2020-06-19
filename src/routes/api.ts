@@ -18,7 +18,6 @@ export const articlesCache = new Cache<types.ArticleApiData>({
 });
 
 const defaultHeadlineParams = { country: 'us' };
-
 const sendTopHeadlines = async (ctx: Koa.ParameterizedContext) => {
   const params: types.NewsApiHeadlineRequest = ctx.request.body;
   const data = await newsApi.topHeadlines({

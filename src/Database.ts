@@ -3,6 +3,9 @@ import { MongoClient, Collection } from 'mongodb';
 import Cache from './Cache';
 import Config from './config';
 
+// we cache collections with a key-value map, so getting a
+// collection only takes collectionName -> collection,
+// instead of collectionName -> client -> db() -> collection
 export default class Database {
   private static cache = new Cache<Collection>();
   private static client: MongoClient;
@@ -10,7 +13,7 @@ export default class Database {
   public static async initialize(): Promise<void> {
     if (this.client !== undefined) return;
 
-    const mongoUri = Config.get('mongoUri');
+    const mongoUri = Config.get('mongoUri') || 'mongodb://localhost';
     const clientOptions = {
       useNewUrlParser: true,
       useUnifiedTopology: true,

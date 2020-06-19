@@ -4,10 +4,13 @@ import { v4 as uuidv4 } from 'uuid';
 import Model from './Model';
 import Parser from '../Parser';
 import cloudinary from '../services/cloudinary';
-import { toUniqueArray } from '../util/fns';
+import { toUniqueArray, parallelize } from '../util/fns';
 
 import * as types from '../typings';
 
+/**
+ * Represents a parsed article and its associated meta-content (tags, description, main image, etc.)
+ */
 export default class SavedArticle extends Model<types.NewsArticleProps> {
   protected static readonly collectionName = 'saved_articles';
 
@@ -48,7 +51,7 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
         ? url.slice(lastFwdSlashIdx, lastPeriodIdx)
         : url.slice(lastFwdSlashIdx);
 
-    return `${folder}/${filename}`;
+    return `${folder}/${filename}`; // e.g. vox/facebook-news-feed-political-ads-2020-election
   }
 
   public get content(): string | null {
@@ -60,11 +63,8 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
   }
 
   public addTags(tags: string[]): this {
-    this.props.tags = toUniqueArray([
-      ...this.tags,
-      ...tags.map(str => str.trim()),
-    ]).sort();
-
+    const newTags = [...this.tags, ...tags.map(str => str.trim())];
+    this.props.tags = toUniqueArray(newTags).sort();
     return this;
   }
 
@@ -129,7 +129,7 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
           super.collection.deleteOne({ uniqueId }),
         ]);
       } else {
-        ({ result } = await super.collection.deleteOne({ uniqueId }));
+        result = (await super.collection.deleteOne({ uniqueId })).result;
       }
 
       return result.ok === 1;
@@ -143,12 +143,13 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
   public static async dropCollection(): Promise<boolean> {
     try {
       const findOpts = { limit: 0, projection: { domain: 1, urlToImage: 1 } };
+      // flat map here to prevent looping twice to get rid of `null` image ids
       const imageIds = (await this.findAll({}, findOpts)).flatMap(
         article => article.cloudinaryImageId || []
       );
 
       await Promise.all([
-        this.deleteImageData(imageIds),
+        parallelize(imageIds, 20, id => cloudinary.uploader.destroy(id)),
         super.dropCollection(),
       ]);
 
@@ -157,19 +158,6 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
       console.error(err);
 
       return false;
-    }
-  }
-
-  private static async deleteImageData(
-    imageIds: string[],
-    chunks: number = 20
-  ): Promise<void> {
-    chunks = chunks > imageIds.length ? imageIds.length : chunks;
-
-    for (let i = 0; i < imageIds.length; i += chunks) {
-      const idChunks = imageIds.slice(i, i + chunks);
-
-      await Promise.all(idChunks.map(id => cloudinary.uploader.destroy(id)));
     }
   }
 }

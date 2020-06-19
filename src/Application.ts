@@ -17,12 +17,14 @@ type ContentSecurityPolicy = {
 
 const ONE_DAY_IN_MS = 60 * 60 * 24 * 1000;
 const isDev = Config.get('env') === 'dev';
-const shouldCompile = isDev && !process.argv.includes('no-compile');
 
 export default class Application {
   private static readonly singleton = new Application();
 
   private readonly port = Config.get('port') || 3000;
+
+  // because we (optionally) use Cloudinary, we only have to whitelist their
+  // CDN domain for images parsed from articles
   private csp: ContentSecurityPolicy = Object.freeze({
     'default-src': ['self'],
     'script-src': ['self', 'unsafe-inline', 'unsafe-eval'],
@@ -79,7 +81,6 @@ export default class Application {
       .use(apiRouter.allowedMethods())
       .on('error', (err, ctx) => {
         err = err instanceof Error ? err.stack || err.message : err;
-
         console.error(err, ctx.url);
       });
 
@@ -97,6 +98,8 @@ export default class Application {
     ) => Promise<void> = this.clientApp.getRequestHandler();
     const defaultNextHeaders = { 'Content-Security-Policy': this.cspHeader };
 
+    // this Next handler should only be added in last; any pathname not
+    // starting with '/api' ends up here
     this.koa.use(async ctx => {
       ctx.set(defaultNextHeaders);
       await clientAppHandler(ctx.req, ctx.res);
@@ -104,18 +107,27 @@ export default class Application {
     });
   }
 
+  // when building with Next beforehand (`npm run build`), there should
+  // be no need to `prepare` the app here
   private async initializeNextApp() {
     const start = Date.now();
-    if (shouldCompile) await this.clientApp.prepare();
-    this.startupMessages.push(`${Date.now() - start}ms to start Next.js.`);
+    const shouldPrepare = isDev && !process.argv.includes('no-compile');
+
+    if (shouldPrepare) await this.clientApp.prepare();
+
+    const delta = Date.now() - start;
+
+    this.startupMessages.push(`${delta}ms to start Next.js.`);
   }
 
   private async initializeDatabase() {
     const start = Date.now();
+
     await Database.initialize();
-    this.startupMessages.push(
-      `${Date.now() - start}ms to connect to database.`
-    );
+
+    const delta = Date.now() - start;
+
+    this.startupMessages.push(`${delta}ms to connect to database.`);
   }
 
   public async setup(): Promise<this> {

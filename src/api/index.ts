@@ -8,6 +8,8 @@ import Parser from '../Parser';
 import * as types from '../typings';
 
 // https://newsapi.org/docs/endpoints
+type ApiEndpoint = '/top-headlines' | '/everything' | '/sources';
+
 const api = axios.create({
   baseURL: 'https://newsapi.org/v2',
   headers: {
@@ -28,13 +30,13 @@ const populateEmptyContent = (
   );
 
 const queryApi = async (
-  uri: '/top-headlines' | '/everything' | '/sources',
+  path: ApiEndpoint,
   params?: types.ApiRequest
 ): Promise<AxiosResponse<any>> => {
-  const url = params ? `${uri}?${qs.stringify({ ...params })}` : uri;
+  const url = params ? `${path}?${qs.stringify(params)}` : path;
   const response = await api.get(url);
 
-  if (uri === '/top-headlines' || uri === '/everything')
+  if (path === '/top-headlines' || path === '/everything')
     response.data.articles = await populateEmptyContent(
       response.data.articles as types.ArticleApiData[]
     );
