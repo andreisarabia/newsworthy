@@ -1,8 +1,10 @@
 import util from 'util';
 
-type CacheOptions = {
+type CacheOptions<L, P extends keyof L> = {
+  ratioToDelete: number;
   maxSize?: number;
-  ratioToDelete?: number;
+  clearInterval?: number;
+  onClear?: (cacheMap: Map<P, L>) => Promise<any>;
 };
 
 const cacheSizeReducer = <T>(acc: number, value: T): number => {
@@ -12,18 +14,36 @@ const cacheSizeReducer = <T>(acc: number, value: T): number => {
   return acc + Buffer.byteLength(safelyStringified);
 };
 
-export default class Cache<T extends { [key: string]: any }> {
-  private keyValueMap = new Map<string, T>();
+export default class Cache<
+  T extends { [key: string]: any },
+  K extends keyof T
+> {
+  private keyValueMap = new Map<K, T>();
+  private options: CacheOptions<T, K>;
 
-  public constructor(private options: CacheOptions = {}) {
-    if (
-      options.ratioToDelete &&
-      (options.ratioToDelete >= 1 || options.ratioToDelete < 0)
-    ) {
+  public constructor(options: Partial<CacheOptions<T, K>> = {}) {
+    const {
+      clearInterval,
+      ratioToDelete = 1 / 10,
+      onClear = () => Promise.resolve(),
+    } = options;
+
+    if (ratioToDelete && (ratioToDelete >= 1 || ratioToDelete < 0)) {
       throw new Error(
         `Cannot create cache with ratio ${options.ratioToDelete}`
       );
     }
+
+    if (clearInterval) {
+      setInterval(() => {
+        if (this.isEmpty) return;
+
+        this.keyValueMap.clear();
+        onClear(this.keyValueMap);
+      }, clearInterval);
+    }
+
+    this.options = { ratioToDelete, clearInterval, onClear };
   }
 
   private checkCache() {
@@ -37,7 +57,7 @@ export default class Cache<T extends { [key: string]: any }> {
   }
 
   private partiallyClearCache() {
-    const { maxSize, ratioToDelete = 1 / 10 } = this.options;
+    const { maxSize, ratioToDelete } = this.options;
     let amountToDelete = Math.floor(maxSize! * ratioToDelete);
     let counter = 0;
 
@@ -48,16 +68,24 @@ export default class Cache<T extends { [key: string]: any }> {
     }
   }
 
-  public get(key: string): T | undefined {
+  public get isEmpty(): boolean {
+    return this.keyValueMap.size === 0;
+  }
+
+  public get(key: K): T | undefined {
     return this.keyValueMap.get(key);
   }
 
-  public set(key: string, value: T): void {
+  public set(key: K, value: T): void {
     this.checkCache();
     this.keyValueMap.set(key, value);
   }
 
-  public setAll(commonKey: string, values: T[]): void {
+  public getAll(): T[] {
+    return [...this.keyValueMap.values()];
+  }
+
+  public setAll(commonKey: K, values: T[]): void {
     this.checkCache();
 
     values.forEach(value => {
@@ -65,7 +93,7 @@ export default class Cache<T extends { [key: string]: any }> {
     });
   }
 
-  public has(key: string): boolean {
+  public has(key: K): boolean {
     return this.keyValueMap.has(key);
   }
 }

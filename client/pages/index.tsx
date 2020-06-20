@@ -22,7 +22,7 @@ export default class Home extends React.Component<{}, SavedArticleState> {
   async componentDidMount() {
     const {
       data: { articles },
-    } = await axios.get(`http://localhost:3000/api/article/list`);
+    } = await axios.get(`${window.location.origin}/api/article/list`);
 
     (articles as SavedArticle[]).sort((a, b) =>
       sortByDate(new Date(a.createdAt), new Date(b.createdAt))
@@ -37,7 +37,7 @@ export default class Home extends React.Component<{}, SavedArticleState> {
         data: { article },
       } = await axios.post('/api/article/save', { url });
 
-      this.setState(state => ({ list: [...state.list, article] }));
+      this.setState(state => ({ list: [article, ...state.list] }));
     } catch (error) {
       console.error(error);
     }

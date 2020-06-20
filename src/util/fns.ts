@@ -12,3 +12,6 @@ export const parallelize = async <T>(
   for (let i = 0; i < chunks.length; i += numChunks)
     await Promise.all(chunks.slice(i, i + numChunks).map(fn));
 };
+
+export const isEmptyObject = (obj: object): boolean =>
+  Object.keys(obj).length === 0;

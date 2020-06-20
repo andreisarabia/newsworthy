@@ -30,19 +30,19 @@ interface UploadApiResponse {
   [futureKey: string]: any;
 }
 
-const {
-  cloudinaryCloudName: cloud_name,
-  cloudinaryApiKey: api_key,
-  cloudinaryApiSecret: api_secret,
-} = Config.getAll(
-  'cloudinaryCloudName',
-  'cloudinaryApiKey',
-  'cloudinaryApiSecret'
-);
-
 let cloudinary: typeof _cloudinary;
 
-if (cloud_name && api_key && api_secret) {
+if (Config.hasCloudflareCredentials) {
+  const {
+    cloudinaryCloudName: cloud_name,
+    cloudinaryApiKey: api_key,
+    cloudinaryApiSecret: api_secret,
+  } = Config.getAll(
+    'cloudinaryCloudName',
+    'cloudinaryApiKey',
+    'cloudinaryApiSecret'
+  );
+
   cloudinary = _cloudinary;
   cloudinary.config({ cloud_name, api_key, api_secret });
 } else {

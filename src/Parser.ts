@@ -111,6 +111,10 @@ export default class Parser {
     return parsed.content;
   }
 
+  public static async getWebpageHtml(url: string): Promise<string> {
+    return (await axios.get(url)).data;
+  }
+
   private static extractFirstParagraph(snippet: string): string {
     const p = JSDOM.fragment(snippet).querySelector('p');
 
@@ -121,10 +125,6 @@ export default class Parser {
     const title = JSDOM.fragment(html).querySelector('title');
 
     return title ? title.textContent || striptags(title.innerHTML) : null;
-  }
-
-  private static async getWebpageHtml(url: string): Promise<string> {
-    return (await axios.get(url)).data;
   }
 
   private static async uploadToCloudinary({

@@ -22,10 +22,8 @@ const populateEmptyContent = (
 ): Promise<types.ArticleApiData[]> =>
   Promise.all(
     articles.map(async (data: types.ArticleApiData) => {
-      if (!data.content)
-        data.content = await Parser.extractContentFromUrl(data.url);
-
-      return { ...data };
+      data.content = await Parser.extractContentFromUrl(data.url);
+      return data;
     })
   );
 
