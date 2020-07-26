@@ -58,8 +58,8 @@ const Navbar = styled.header`
       width: 100%;
       padding: 0.25rem;
       font-size: 1.5rem;
-      background: rgb(0, 0, 0) none repeat scroll 0% 0%;
-      border: 2px solid rgb(0, 0, 0);
+      background: #dbd7d7 none repeat scroll 0% 0%;
+      border: 2px solid #53a9d2;
       color: #b385bd;
     }
   }

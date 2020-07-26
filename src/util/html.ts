@@ -43,7 +43,9 @@ export const extractMetaContent = <K extends MetaTagProperties>(
 };
 
 export const extractCanonicalUrl = (html: string): string | null => {
-  const linkTags = new JSDOM(html).window.document.querySelectorAll('link');
+  const linkTags = new JSDOM(html).window.document.head.querySelectorAll(
+    'link'
+  );
 
   for (const tag of linkTags) if (tag.rel === 'canonical') return tag.href;
 

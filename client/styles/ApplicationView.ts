@@ -1,13 +1,14 @@
 import styled from 'styled-components';
 
 const ApplicationView = styled.main`
-  margin: 2rem;
+  margin: 1rem;
 
-  > section#saved-articles {
+  #saved-articles {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     width: 90%;
-    color: whitesmoke;
+    margin: auto;
+    color: black;
 
     h3 {
       font-weight: 100;
@@ -28,12 +29,18 @@ const ApplicationView = styled.main`
         width: 100%;
         height: 95%;
       }
+
+      .article-card {
+        display: grid;
+        grid-template-rows: 40vh;
+      }
     }
   }
 
   span.article-meta {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 0.75rem;
     color: #8c6894;
     width: 80%;

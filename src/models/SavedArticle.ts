@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import Model from './Model';
 import Parser from '../Parser';
 import cloudinary from '../services/cloudinary';
-import { toUniqueArray, parallelize } from '../util/fns';
+import * as utils from '../util';
 
 import * as types from '../typings';
 
@@ -63,8 +63,8 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
   }
 
   public addTags(tags: string[]): this {
-    const newTags = [...this.tags, ...tags.map(str => str.trim())];
-    this.props.tags = toUniqueArray(newTags).sort();
+    tags = tags.map(str => str.trim());
+    this.props.tags = utils.toUniqueArray([...this.tags, ...tags]).sort();
     return this;
   }
 
@@ -84,6 +84,18 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
     return this;
   }
 
+  public static async addNew(url: string): Promise<SavedArticle | null> {
+    try {
+      const data: types.NewsArticleProps = await Parser.extractUrlData(url);
+
+      return new SavedArticle(data).save();
+    } catch (error) {
+      console.error(error);
+
+      return null;
+    }
+  }
+
   public static async findOne(
     criteria: Partial<types.NewsArticleProps>,
     options?: mongodb.FindOneOptions
@@ -100,18 +112,6 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
     const results = await super.collection.find(criteria, options).toArray();
 
     return results.map(resultData => new SavedArticle(resultData));
-  }
-
-  public static async addNew(url: string): Promise<SavedArticle | null> {
-    try {
-      const data: types.NewsArticleProps = await Parser.extractUrlData(url);
-
-      return new SavedArticle(data).save();
-    } catch (error) {
-      console.error(error);
-
-      return null;
-    }
   }
 
   public static async delete(uniqueId: string): Promise<boolean> {
@@ -140,6 +140,7 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
     }
   }
 
+ 
   public static async dropCollection(): Promise<boolean> {
     try {
       const findOpts = { limit: 0, projection: { domain: 1, urlToImage: 1 } };
@@ -149,7 +150,7 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
       );
 
       await Promise.all([
-        parallelize(imageIds, 20, id => cloudinary.uploader.destroy(id)),
+        utils.parallelize(imageIds, 20, id => cloudinary.uploader.destroy(id)),
         super.dropCollection(),
       ]);
 

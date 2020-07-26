@@ -1,4 +1,5 @@
 const isAllCaps = (str: string) => /^[A-Z]+$/.test(str);
+const newLinesRegex = new RegExp('\r\n', 'g');
 
 export const removeExtraLines = (str: string) =>
   str.replace(/\n/g, '').replace(/\r/g, '');
@@ -22,3 +23,6 @@ export const properCase = (name: string): string => {
 
 export const countWords = (str: string) =>
   removeExtraSpaces(str).replace(/\n /, '\n').split(' ').length;
+
+export const normalizeNewLines = (str: string) =>
+  str.replace(newLinesRegex, '\n');

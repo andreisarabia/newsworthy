@@ -32,7 +32,7 @@ export default class ArticleCard extends React.Component<ArticleCardProps> {
           as={`/view${slug === '/' ? `/${uniqueId}` : slug}`}
         >
           <a>
-            <img src={urlToImage || ''} alt='' />
+            <img src={urlToImage || ''} alt={description} />
           </a>
         </Link>
         <h3>{title}</h3>

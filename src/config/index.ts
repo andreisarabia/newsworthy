@@ -26,9 +26,27 @@ export default class Config {
     const keyMap: Partial<{ [key in K]: ConfigFile[K] }> = {};
 
     keys.forEach(key => {
-      keyMap[key] = this.settings[key];
+      const value = this.settings[key];
+
+      if (value) keyMap[key] = value;
     });
 
     return keyMap;
+  }
+
+  public static get hasCloudflareCredentials(): boolean {
+    const {
+      cloudinaryCloudName,
+      cloudinaryApiKey,
+      cloudinaryApiSecret,
+    } = this.getAll(
+      'cloudinaryCloudName',
+      'cloudinaryApiKey',
+      'cloudinaryApiSecret'
+    );
+
+    return Boolean(
+      cloudinaryCloudName && cloudinaryApiKey && cloudinaryApiSecret
+    );
   }
 }

@@ -40,24 +40,23 @@
     url('../fonts/LM-bold-italic.ttf') format('truetype');
 }
 
-body {
-  font-family: 'Latin Modern', Helvetica, sans-serif;
-  margin: 0;
-  background: #1a1a1a;
-  height: 100vh;
-  box-sizing: border-box;
-}
-
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
+body {
+  font-family: 'Latin Modern', Helvetica, sans-serif;
+  margin: 0;
+  background: #dbd7d7;
+  height: 100vh;
+}
+
 body,
 html {
   color: #8c6894;
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 body > div {

@@ -104,11 +104,15 @@ export default class Parser {
   ): Promise<string | null> {
     const url = utils.normalizeUrl(dirtyUrl);
     const html = utils.sanitizeHtml(await this.getWebpageHtml(url));
-    const parsed: Mercury.ParseResult = await Mercury.parse(url, {
+    const { content }: Mercury.ParseResult = await Mercury.parse(url, {
       html: Buffer.from(html, 'utf-8'),
     });
 
-    return parsed.content;
+    return utils.normalizeNewLines(content || '');
+  }
+
+  public static async getWebpageHtml(url: string): Promise<string> {
+    return (await axios.get(url)).data;
   }
 
   private static extractFirstParagraph(snippet: string): string {
@@ -121,10 +125,6 @@ export default class Parser {
     const title = JSDOM.fragment(html).querySelector('title');
 
     return title ? title.textContent || striptags(title.innerHTML) : null;
-  }
-
-  private static async getWebpageHtml(url: string): Promise<string> {
-    return (await axios.get(url)).data;
   }
 
   private static async uploadToCloudinary({

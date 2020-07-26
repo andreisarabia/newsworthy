@@ -21,22 +21,28 @@ const isDev = Config.get('env') === 'dev';
 export default class Application {
   private static readonly singleton = new Application();
 
-  private readonly port = Config.get('port') || 3000;
-
-  // because we (optionally) use Cloudinary, we only have to whitelist their
-  // CDN domain for images parsed from articles
-  private csp: ContentSecurityPolicy = Object.freeze({
-    'default-src': ['self'],
-    'script-src': ['self', 'unsafe-inline', 'unsafe-eval'],
-    'style-src': ['self', 'unsafe-inline'],
-    'img-src': ['self', 'https://res.cloudinary.com'],
-  });
   private clientApp = nextApp({ dir: './client', dev: isDev });
   private pathMap = new Map<string, string[]>();
   private koa = new Koa();
   private startupMessages: string[] = [];
+  private readonly port = Config.get('port') || 3000;
+  private readonly csp: ContentSecurityPolicy;
 
   private constructor() {
+    const csp = {
+      'default-src': ['self'],
+      'script-src': ['self', 'unsafe-inline', 'unsafe-eval'],
+      'style-src': ['self', 'unsafe-inline'],
+      'img-src': ['self'],
+    };
+
+    if (Config.hasCloudflareCredentials) {
+      // because we (optionally) use Cloudinary, we only have to whitelist their
+      // CDN domain for images parsed from articles
+      csp['img-src'] = csp['img-src'].concat('https://res.cloudinary.com');
+    }
+
+    this.csp = Object.freeze(csp);
     this.koa.keys = ['__newsworthy_app'];
   }
 
@@ -107,8 +113,9 @@ export default class Application {
     });
   }
 
-  // when building with Next beforehand (`npm run build`), there should
-  // be no need to `prepare` the app here
+  // when building with Next beforehand (`npm run build`), we shouldn't
+  // `prepare` the app here. The app will be performance-optimized
+  // and ready to be served by the Next middleware
   private async initializeNextApp() {
     const start = Date.now();
     const shouldPrepare = isDev && !process.argv.includes('no-compile');
@@ -141,12 +148,11 @@ export default class Application {
   public start(): void {
     this.koa.listen(this.port, () => {
       this.startupMessages.push(
-        `[${timestamp()}]`,
-        `Listening on port ${this.port}...`
+        `[${timestamp()}] Listening on port ${this.port}...`
       );
 
-      console.log('API Paths: ', this.pathMap);
       console.log(this.startupMessages.join('\n'));
+      console.log('API Paths: ', this.pathMap);
     });
   }
 
