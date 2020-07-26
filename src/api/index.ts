@@ -1,9 +1,10 @@
 import qs from 'querystring';
 
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 
 import Config from '../config';
 import Parser from '../Parser';
+import * as utils from '../util';
 
 import * as types from '../typings';
 
@@ -17,29 +18,33 @@ const api = axios.create({
   },
 });
 
-const populateEmptyContent = (
+const populateEmptyContent = async (
   articles: types.ArticleApiData[]
-): Promise<types.ArticleApiData[]> =>
-  Promise.all(
-    articles.map(async (data: types.ArticleApiData) => {
-      data.content = await Parser.extractContentFromUrl(data.url);
-      return data;
-    })
+): Promise<types.ArticleApiData[]> => {
+  articles = articles.filter(
+    ({ url }) => !utils.extractDomain(url).includes('youtube.com')
   );
 
-const queryApi = async (
+  const populatedContent: types.ArticleApiData[] = [];
+
+  await utils.parallelize(articles, 15, async article => {
+    article.content = await Parser.extractContentFromUrl(article.url);
+    populatedContent.push(article);
+  });
+
+  return populatedContent;
+};
+
+const queryApi = async <
+  T extends types.NewsApiRequest,
+  K extends types.NewsApiResponse
+>(
   path: ApiEndpoint,
-  params?: types.ApiRequest
-): Promise<AxiosResponse<any>> => {
+  params?: T
+): Promise<K> => {
   const url = params ? `${path}?${qs.stringify(params)}` : path;
   const response = await api.get(url);
-
-  if (path === '/top-headlines' || path === '/everything')
-    response.data.articles = await populateEmptyContent(
-      response.data.articles as types.ArticleApiData[]
-    );
-
-  return response;
+  return response.data;
 };
 
 /**
@@ -49,13 +54,27 @@ const queryApi = async (
  */
 export const topHeadlines = async (
   params?: types.NewsApiHeadlineRequest
-): Promise<types.NewsApiHeadlineResponse> =>
-  (await queryApi('/top-headlines', params)).data;
+): Promise<types.NewsApiHeadlineResponse> => {
+  const data: types.NewsApiHeadlineResponse = await queryApi(
+    '/top-headlines',
+    params
+  );
+  const articles = await populateEmptyContent(data.articles);
+
+  return { ...data, articles };
+};
 
 export const everything = async (
   params?: types.NewsApiEverythingRequest
-): Promise<types.NewsApiEverythingResponse> =>
-  (await queryApi('/everything', params)).data;
+): Promise<types.NewsApiEverythingResponse> => {
+  const data: types.NewsApiEverythingResponse = await queryApi(
+    '/everything',
+    params
+  );
+  const articles = await populateEmptyContent(data.articles);
+
+  return { ...data, articles };
+};
 
 /**
  * Returns the subset of news publishers that top headlines

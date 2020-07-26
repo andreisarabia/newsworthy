@@ -52,11 +52,15 @@ export interface ArticleSourceProps extends MongoModelProps {
   country: string;
 }
 
-export interface ApiRequest {
+export interface NewsApiRequest {
   [key: string]: any;
 }
 
-export interface NewsApiHeadlineRequest extends ApiRequest {
+export interface NewsApiResponse {
+  [key: string]: any;
+}
+
+export interface NewsApiHeadlineRequest extends NewsApiRequest {
   country?: string;
   category?: NewsCategory;
   q?: string;
@@ -65,7 +69,7 @@ export interface NewsApiHeadlineRequest extends ApiRequest {
 }
 
 export interface NewsApiEverythingRequest
-  extends ApiRequest,
+  extends NewsApiRequest,
     Pick<NewsApiHeadlineRequest, 'q' | 'pageSize' | 'page'> {
   qInTitle: string;
   sources: string;
@@ -77,13 +81,13 @@ export interface NewsApiEverythingRequest
   sortBy: 'relevancy' | 'popularity' | 'publishedAt' /* default */;
 }
 
-export interface NewsApiSourcesRequest extends ApiRequest {
+export interface NewsApiSourcesRequest extends NewsApiRequest {
   category?: NewsCategory;
   language?: string;
   country?: string; // default is all countries
 }
 
-export interface NewsApiHeadlineResponse {
+export interface NewsApiHeadlineResponse extends NewsApiResponse {
   status: 'ok' | 'error';
   code?: 'apiKeyMissing';
   message?: 'string';
@@ -95,7 +99,7 @@ export interface NewsApiEverythingResponse extends NewsApiHeadlineResponse {
   articles: Omit<ArticleApiData, 'urlToImage'>[];
 }
 
-export interface NewsApiSourcesResponse {
+export interface NewsApiSourcesResponse extends NewsApiResponse {
   status: 'ok' | 'error';
   sources: ArticleSourceProps[];
 }

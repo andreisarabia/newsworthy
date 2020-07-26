@@ -13,10 +13,7 @@ const IS_DEV = Config.get('env') === 'dev';
 const ONE_MEG = 1024 * 1024;
 const THIRTY_MINUTES = 100 * 60 * 60 * 30;
 
-export const articlesCache = new Cache<
-  types.ArticleApiData,
-  keyof types.ArticleApiData
->({
+export const articlesCache = new Cache<types.ArticleApiData, 'url'>({
   maxSize: ONE_MEG,
   clearInterval: THIRTY_MINUTES,
 });
@@ -137,7 +134,8 @@ const deleteArticleData = async (ctx: Koa.ParameterizedContext) => {
 const resetAppData = async (ctx: Koa.ParameterizedContext) => {
   if (!IS_DEV) ctx.throw(500, new Error('Forbidden URL.'));
 
-  await SavedArticle.dropCollection(), (ctx.body = 'ok');
+  await SavedArticle.dropCollection();
+  ctx.body = 'ok';
 };
 
 export default new KoaRouter({ prefix: '/api/article' })

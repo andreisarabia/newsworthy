@@ -69,10 +69,7 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
     const addLinkStyle = {
       display: this.state.showAddLinkInput ? 'initial' : 'none',
     };
-    const borderBottomStyle = {
-      borderBottom: '2px solid #53a9d2',
-      color: 'whitesmoke',
-    };
+    const borderBottomStyle = { borderBottom: '2px solid #53a9d2' };
 
     return (
       <Navbar>

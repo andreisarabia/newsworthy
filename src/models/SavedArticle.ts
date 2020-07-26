@@ -63,8 +63,8 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
   }
 
   public addTags(tags: string[]): this {
-    const newTags = [...this.tags, ...tags.map(str => str.trim())];
-    this.props.tags = utils.toUniqueArray(newTags).sort();
+    tags = tags.map(str => str.trim());
+    this.props.tags = utils.toUniqueArray([...this.tags, ...tags]).sort();
     return this;
   }
 
@@ -140,20 +140,7 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
     }
   }
 
-  public static async saveFromNewsApi(apiData: types.ArticleApiData) {
-    // const url = utils.normalizeUrl(apiData.url);
-    // const { data } = (await this.findOne({ url })) || { data: { ...apiData } };
-    // const sizeOfArticle = Buffer.byteLength(data.content || '');
-    // const p: types.NewsArticleProps = {
-    //   ...data,
-    //   sizeOfArticle,
-    //   articleToPageSizeRatio: sizeOfArticle 
-    // };
-
-    apiData;
-    // await new SavedArticle(preppedData).save();
-  }
-
+ 
   public static async dropCollection(): Promise<boolean> {
     try {
       const findOpts = { limit: 0, projection: { domain: 1, urlToImage: 1 } };

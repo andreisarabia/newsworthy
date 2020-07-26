@@ -53,7 +53,7 @@ export default class Cache<
   }
 
   private get sizeInBytes(): number {
-    return [...this.keyValueMap.values()].reduce(cacheSizeReducer, 0);
+    return this.getAll().reduce(cacheSizeReducer, 0);
   }
 
   private partiallyClearCache() {
