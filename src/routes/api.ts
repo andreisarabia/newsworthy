@@ -10,38 +10,21 @@ import * as utils from '../util';
 import * as types from '../typings';
 
 const IS_DEV = Config.get('env') === 'dev';
-const ONE_MEG = 1024 * 1024;
-const THIRTY_MINUTES = 100 * 60 * 60 * 30;
 
 export const articlesCache = new Cache<types.ArticleApiData, 'url'>({
-  maxSize: ONE_MEG,
-  clearInterval: THIRTY_MINUTES,
+  clearInterval: 30,
 });
 
-const defaultHeadlineParams = { country: 'us' };
 const sendTopHeadlines = async (ctx: Koa.ParameterizedContext) => {
-  const params: types.NewsApiHeadlineRequest = ctx.request.body;
+  if (articlesCache.isEmpty) {
+    const { articles } = await newsApi.topHeadlines({ country: 'us' });
 
-  if (!params) ctx.throw(400, 'Cannot fetch top headlines.');
+    articlesCache.setAll('url', articles);
 
-  let articles: types.ArticleApiData[];
-
-  if (utils.isEmptyObject(params)) {
-    if (articlesCache.isEmpty) {
-      ({ articles } = await newsApi.topHeadlines(defaultHeadlineParams));
-
-      articlesCache.setAll('url', articles);
-    } else {
-      articles = articlesCache.getAll();
-    }
+    ctx.body = articles;
   } else {
-    ({ articles } = await newsApi.topHeadlines({
-      ...defaultHeadlineParams,
-      ...params,
-    }));
+    ctx.body = { articles: articlesCache.getAll() };
   }
-
-  ctx.body = { articles };
 };
 
 const sendEverything = async (ctx: Koa.ParameterizedContext) => {

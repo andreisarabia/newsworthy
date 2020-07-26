@@ -13,7 +13,6 @@ newsworthy is a news article saver with a no-nonsense UI.
 
 # Todo
 
-- Implement stream of recent news from [News API's](https://newsapi.org) (API prepped in `src/api/index.ts`)
 - Cache News API response data to consume fewer API requests
 - Add tag functionality to saved articles
 - Save lead image to filesystem (in case of Cloudinary failure)

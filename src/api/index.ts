@@ -4,6 +4,7 @@ import axios from 'axios';
 
 import Config from '../config';
 import Parser from '../Parser';
+import cloudinary from '../services/cloudinary';
 import * as utils from '../util';
 
 import * as types from '../typings';
@@ -13,26 +14,52 @@ type ApiEndpoint = '/top-headlines' | '/everything' | '/sources';
 
 const api = axios.create({
   baseURL: 'https://newsapi.org/v2',
-  headers: {
-    'X-Api-Key': Config.get('newsApiKey'),
-  },
+  headers: { 'X-Api-Key': Config.get('newsApiKey') },
 });
 
+// the News API only responds with some of the content of an article,
+// so we have to get that manually using Mercury Parser
 const populateEmptyContent = async (
   articles: types.ArticleApiData[]
 ): Promise<types.ArticleApiData[]> => {
+  // urls are infrequently malformed, so we only return articles that
+  // have a working URL and isn't YouTube (can't parse it otherwise)
   articles = articles.filter(
-    ({ url }) => !utils.extractDomain(url).includes('youtube.com')
+    ({ url }) =>
+      url.includes('.com/') && !utils.extractDomain(url).includes('youtube.com')
   );
 
   const populatedContent: types.ArticleApiData[] = [];
+  const cloudinaryImages: string[][] = [];
 
-  await utils.parallelize(articles, 15, async article => {
+  const articlePopulator = async (article: types.ArticleApiData) => {
     article.content = await Parser.extractContentFromUrl(article.url);
     populatedContent.push(article);
-  });
+  };
 
-  return populatedContent;
+  const imageUploader = async ({ urlToImage, url }: types.ArticleApiData) => {
+    if (urlToImage) {
+      const { secure_url } = await cloudinary.uploader.upload(urlToImage);
+      cloudinaryImages.push([url, secure_url]);
+    } else {
+      cloudinaryImages.push([url, '']);
+    }
+  };
+
+  await Promise.all([
+    utils.parallelize(articles, 5, articlePopulator),
+    utils.parallelize(articles, 10, imageUploader),
+  ]);
+
+  return populatedContent.map(article => {
+    const [, urlToImage] = cloudinaryImages.find(
+      ([url]) => url === article.url
+    )!;
+
+    if (urlToImage) article.urlToImage = urlToImage;
+
+    return article;
+  });
 };
 
 const queryApi = async <
@@ -53,7 +80,7 @@ const queryApi = async <
  * sources. Sorted by the earliest date published first.
  */
 export const topHeadlines = async (
-  params?: types.NewsApiHeadlineRequest
+  params: types.NewsApiHeadlineRequest = {}
 ): Promise<types.NewsApiHeadlineResponse> => {
   const data: types.NewsApiHeadlineResponse = await queryApi(
     '/top-headlines',
@@ -81,6 +108,6 @@ export const everything = async (
  * are available from.
  */
 export const sources = async (
-  params?: types.NewsApiSourcesRequest
+  params: types.NewsApiSourcesRequest = {}
 ): Promise<types.NewsApiSourcesResponse> =>
   (await queryApi('/sources', params)).data;
