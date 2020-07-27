@@ -7,14 +7,15 @@ type ConfigFile = {
   cloudinaryCloudName?: string;
   cloudinaryApiKey?: string;
   cloudinaryApiSecret?: string;
+  newsApiResetInterval: number; // in seconds
   env: 'dev' | 'prod';
 };
 
 export default class Config {
-  private static readonly settings: ConfigFile = {
+  private static readonly settings: ConfigFile = Object.freeze({
     ...configJSON,
     env: process.env.NODE_ENV !== 'production' ? 'dev' : 'prod',
-  };
+  });
 
   public static get<K extends keyof ConfigFile>(key: K): ConfigFile[K] {
     return this.settings[key];
