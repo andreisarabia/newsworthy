@@ -1,13 +1,12 @@
 import { MongoClient, Collection } from 'mongodb';
 
-import Cache from './Cache';
 import Config from './config';
 
 // we cache collections with a key-value map, so getting a
 // collection only takes collectionName -> collection,
 // instead of collectionName -> client -> db() -> collection
 export default class Database {
-  private static cache = new Cache<Collection, 'collectionName'>();
+  private static cache = new Map<string, Collection>();
   private static client: MongoClient;
 
   public static async initialize(): Promise<void> {
@@ -27,11 +26,13 @@ export default class Database {
     if (this.client === undefined)
       throw new Error('Instantiate the database client before using it!');
 
-    const collection = collectionName as 'collectionName';
+    let collection = this.cache.get(collectionName);
 
-    if (!this.cache.has(collection))
-      this.cache.set(collection, this.client.db().collection(collection));
+    if (!collection) {
+      collection = this.client.db().collection(collectionName);
+      this.cache.set(collectionName, collection);
+    }
 
-    return this.cache.get(collection)!;
+    return collection;
   }
 }

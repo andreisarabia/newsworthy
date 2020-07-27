@@ -2,36 +2,59 @@ import Koa from 'koa';
 import KoaRouter from 'koa-router';
 
 import SavedArticle from '../models/SavedArticle';
-import Cache from '../Cache';
 import Config from '../config';
+import redis from '../cache/redis';
 import * as newsApi from '../api';
 import * as utils from '../util';
 
 import * as types from '../typings';
 
 const IS_DEV = Config.get('env') === 'dev';
+const CACHE_RESET_INTERVAL = Config.get('newsApiResetInterval');
 
-export const articlesCache = new Cache<types.ArticleApiData, 'url'>({
-  clearInterval: 30,
-});
+const cache = {
+  getArticles(): Promise<types.ArticleApiData[] | null> {
+    return new Promise((resolve, reject) => {
+      redis.get('cached_articles', (err, articles) => {
+        if (err) reject(err);
+        else if (articles) resolve(JSON.parse(articles));
+        else resolve(null);
+      });
+    });
+  },
+  setArticles(articles: types.ArticleApiData[]): Promise<void> {
+    return new Promise((resolve, reject) => {
+      redis.setex(
+        'cached_articles',
+        CACHE_RESET_INTERVAL,
+        JSON.stringify(articles),
+        err => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+  },
+};
 
 const sendTopHeadlines = async (ctx: Koa.ParameterizedContext) => {
-  if (articlesCache.isEmpty) {
-    const { articles } = await newsApi.topHeadlines({ country: 'us' });
+  let articles: types.ArticleApiData[] | null = await cache.getArticles();
 
-    articlesCache.setAll('url', articles);
-
+  if (articles) {
     ctx.body = articles;
-  } else {
-    ctx.body = { articles: articlesCache.getAll() };
+    return;
   }
+
+  articles = (await newsApi.topHeadlines({ country: 'us' })).articles;
+
+  await cache.setArticles(articles);
+
+  ctx.body = articles;
 };
 
 const sendEverything = async (ctx: Koa.ParameterizedContext) => {
   const params: types.NewsApiEverythingRequest = ctx.request.body;
   const data = await newsApi.everything(params);
-
-  articlesCache.setAll('url', data.articles);
 
   ctx.body = { data };
 };
@@ -118,6 +141,7 @@ const resetAppData = async (ctx: Koa.ParameterizedContext) => {
   if (!IS_DEV) ctx.throw(500, new Error('Forbidden URL.'));
 
   await SavedArticle.dropCollection();
+
   ctx.body = 'ok';
 };
 
