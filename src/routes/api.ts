@@ -130,6 +130,13 @@ const findArticles = async (ctx: Koa.ParameterizedContext) => {
   ctx.body = { count: articles.length, articles };
 };
 
+const sendArticleData = async (ctx: Koa.ParameterizedContext) => {
+  const { articleId } = ctx.params as { articleId: string };
+  const article = await SavedArticle.findOne({ uniqueId: articleId });
+
+  ctx.body = { article: article?.data };
+};
+
 const deleteArticleData = async (ctx: Koa.ParameterizedContext) => {
   const { uniqueId } = ctx.params as { uniqueId: string };
   const successful = await SavedArticle.delete(uniqueId);
@@ -152,5 +159,6 @@ export default new KoaRouter({ prefix: '/api/article' })
   .post('/save', saveArticle)
   .post('/add-tags', addTagsToArticle)
   .get('/list', findArticles)
+  .get('/:articleId', sendArticleData)
   .delete('/:uniqueId', deleteArticleData)
   .get('/reset-all', resetAppData);

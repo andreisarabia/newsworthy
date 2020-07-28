@@ -47,8 +47,7 @@ export default class Application {
   }
 
   private get cspHeader(): string {
-    const entries = Object.entries(this.csp);
-    const srcDirectives = entries.map(([src, directives]) => {
+    const srcDirectives = Object.entries(this.csp).map(([src, directives]) => {
       const preppedDirectives = directives.map(directive =>
         isUrl(directive) ? directive : `'${directive}'`
       );

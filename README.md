@@ -15,6 +15,7 @@ newsworthy is a news article saver with a no-nonsense UI.
 
 - ~~Implement stream of recent news from [News APIs](https://newsapi.org)~~
 - ~~Cache News API response data to consume fewer API requests~~
+- Add a "reader mode" for each article
 - Add tag functionality to saved articles
 - Save lead image to filesystem (in case of Cloudinary failure)
 - Save articles for offline viewing

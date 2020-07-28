@@ -17,8 +17,6 @@ const api = axios.create({
   headers: { 'X-Api-Key': Config.get('newsApiKey') },
 });
 
-// the News API only responds with some of the content of an article,
-// so we have to get that manually using Mercury Parser
 const populateEmptyContent = async (
   articles: types.ArticleApiData[]
 ): Promise<types.ArticleApiData[]> => {
@@ -32,6 +30,8 @@ const populateEmptyContent = async (
   const populatedContent: types.ArticleApiData[] = [];
   const cloudinaryImages: string[][] = [];
 
+  // the News API only responds with some of the content of an article,
+  // so we have to get that manually using Mercury Parser
   const articlePopulator = async (article: types.ArticleApiData) => {
     article.content = await Parser.extractContentFromUrl(article.url);
     populatedContent.push(article);

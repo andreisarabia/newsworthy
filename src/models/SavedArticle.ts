@@ -140,7 +140,6 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
     }
   }
 
- 
   public static async dropCollection(): Promise<boolean> {
     try {
       const findOpts = { limit: 0, projection: { domain: 1, urlToImage: 1 } };
