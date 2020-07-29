@@ -6,24 +6,21 @@ import ArticleView from '../../styles/ArticleView';
 
 import { SavedArticle } from '../../typings';
 
-export default () => {
+const fetchArticleData = async (id: string): Promise<SavedArticle> => {
+  const { data } = await axios.get(`/api/article/${id}`);
+  return data.article;
+};
+
+const ArticleViewer = () => {
   const [articleData, setArticleData] = useState<SavedArticle>(null);
   const {
     query: { id },
   } = useRouter();
 
   useEffect(() => {
-    const fetchArticleData = async (): Promise<void> => {
-      if (!id) return;
-
-      const {
-        data: { article },
-      } = await axios.get(`/api/article/${id}`);
-
-      setArticleData(article);
-    };
-
-    fetchArticleData();
+    if (id) {
+      fetchArticleData(id as string).then(setArticleData);
+    }
   }, [id]);
 
   if (articleData === null) return <p>Fetching...</p>;
@@ -41,3 +38,5 @@ export default () => {
     </ArticleView>
   );
 };
+
+export default ArticleViewer;
