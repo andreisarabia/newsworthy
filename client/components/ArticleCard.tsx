@@ -23,13 +23,12 @@ export default class ArticleCard extends React.Component<ArticleCardProps> {
       wordCount,
       source,
     } = this.props.article;
-    const linkHref = { pathname: `/view${slug}`, query: { id: uniqueId } };
 
     return (
       <div className='article-card'>
         <Link
-          href={linkHref}
-          as={`/view${slug === '/' ? `/${uniqueId}` : slug}`}
+          href={{ pathname: `view/${uniqueId}`, query: { id: uniqueId } }}
+          as={`/view${slug}?id=${uniqueId}`}
         >
           <a>
             <img src={urlToImage || ''} alt={description} />

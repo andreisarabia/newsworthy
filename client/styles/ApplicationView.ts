@@ -32,7 +32,6 @@ const ApplicationView = styled.main`
 
       .article-card {
         display: grid;
-        grid-template-rows: 40vh;
       }
     }
   }

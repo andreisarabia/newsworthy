@@ -2,7 +2,6 @@ import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import Mercury from '@postlight/mercury-parser';
 import striptags from 'striptags';
-import he from 'he'; // hehehe
 
 import ArticleSource from './models/ArticleSource';
 import cloudinary from './services/cloudinary';
@@ -89,7 +88,7 @@ export default class Parser {
       sizeOfArticle,
       sizeOfArticlePage,
       createdAt: utils.isoTimestamp(),
-      content: he.encode(content || ''),
+      content: content || '',
       author: utils.properCase(author),
       publishedAt: new Date(publishedAt || Date.now()).toISOString(),
       canonical: utils.extractCanonicalUrl(html) || url,
