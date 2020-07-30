@@ -40,3 +40,10 @@ export interface NewsArticleApiData {
   content: string | null;
   wordCount: number;
 }
+
+export type ReaderViewSettings = {
+  fontSize: string;
+  backgroundColor: string;
+  lineHeight: string;
+  width: string;
+};
