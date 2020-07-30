@@ -4,6 +4,8 @@ import axios from 'axios';
 
 import ArticleSettings from '../../components/ArticleSettings';
 
+import * as colors from '../../constants/colors';
+
 import { SavedArticle, ReaderViewSettings } from '../../typings';
 
 const fetchArticleData = async (id: string): Promise<SavedArticle> => {
@@ -13,15 +15,14 @@ const fetchArticleData = async (id: string): Promise<SavedArticle> => {
 
 const ArticleViewer = ({
   article,
-  ...styleProps
+  width,
+  ...mainStyleProps
 }: { article: SavedArticle | null } & ReaderViewSettings) => {
   if (article === null) return <p>Fetching article data...</p>;
 
-  const { width, ...rest } = styleProps;
-
   return (
-    <main style={{ ...rest }}>
-      <div style={{ width, margin: 'auto' }}>
+    <main style={{ paddingTop: '4rem', ...mainStyleProps }}>
+      <div style={{ margin: 'auto', width }}>
         <h2 style={{ marginTop: '0' }}>{article.title}</h2>
         <h4>{article.description}</h4>
         <div dangerouslySetInnerHTML={{ __html: article.content }}></div>
@@ -30,18 +31,21 @@ const ArticleViewer = ({
   );
 };
 
+const defaultStyleSettings = {
+  fontSize: '1.2rem',
+  backgroundColor: colors.WHITE,
+  lineHeight: '1.5',
+  width: '70%',
+  color: colors.BLACK,
+} as ReaderViewSettings;
+
 const ReaderWrapper = () => {
-  const [styleSettings, setStyleSettings] = useState<ReaderViewSettings>({
-    fontSize: '1.2rem',
-    backgroundColor: '#fbfbf7',
-    lineHeight: '1.5',
-    width: '70%',
-  });
+  const [styleSettings, setStyleSettings] = useState(defaultStyleSettings);
   const [articleData, setArticleData] = useState<SavedArticle>(null);
   const {
     query: { id },
   } = useRouter();
-  const handleSettingsChange = change => {
+  const saveSettingsChange = (change: Partial<ReaderViewSettings>) => {
     setStyleSettings(previousSettings => {
       const newSettings = { ...previousSettings, ...change };
       localStorage.setItem('reader-settings', JSON.stringify(newSettings));
@@ -60,7 +64,7 @@ const ReaderWrapper = () => {
   return (
     <div id='wrapper'>
       <div id='article-settings-wrapper'>
-        <ArticleSettings onChange={handleSettingsChange} {...styleSettings} />
+        <ArticleSettings onChange={saveSettingsChange} {...styleSettings} />
       </div>
       <ArticleViewer article={articleData} {...styleSettings} />
     </div>

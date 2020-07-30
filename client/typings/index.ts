@@ -43,6 +43,7 @@ export interface NewsArticleApiData {
 
 export type ReaderViewSettings = {
   fontSize: string;
+  color?: string;
   backgroundColor: string;
   lineHeight: string;
   width: string;
