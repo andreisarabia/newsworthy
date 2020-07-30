@@ -17,11 +17,15 @@ const ArticleViewer = ({
 }: { article: SavedArticle | null } & ReaderViewSettings) => {
   if (article === null) return <p>Fetching article data...</p>;
 
+  const { width, ...rest } = styleProps;
+
   return (
-    <main style={{ ...styleProps, margin: '4rem auto' }}>
-      <h2>{article.title}</h2>
-      <h4>{article.description}</h4>
-      <div dangerouslySetInnerHTML={{ __html: article.content }}></div>
+    <main style={{ ...rest }}>
+      <div style={{ width, margin: 'auto' }}>
+        <h2 style={{ marginTop: '0' }}>{article.title}</h2>
+        <h4>{article.description}</h4>
+        <div dangerouslySetInnerHTML={{ __html: article.content }}></div>
+      </div>
     </main>
   );
 };
@@ -29,7 +33,7 @@ const ArticleViewer = ({
 const ReaderWrapper = () => {
   const [styleSettings, setStyleSettings] = useState<ReaderViewSettings>({
     fontSize: '1.2rem',
-    backgroundColor: 'rgba(0, 0, 0, 0)',
+    backgroundColor: '#fbfbf7',
     lineHeight: '1.5',
     width: '70%',
   });
@@ -37,16 +41,27 @@ const ReaderWrapper = () => {
   const {
     query: { id },
   } = useRouter();
+  const handleSettingsChange = change => {
+    setStyleSettings(previousSettings => {
+      const newSettings = { ...previousSettings, ...change };
+      localStorage.setItem('reader-settings', JSON.stringify(newSettings));
+      return newSettings;
+    });
+  };
 
   useEffect(() => {
-    if (id) {
-      fetchArticleData(id as string).then(setArticleData);
-    }
+    if (id) fetchArticleData(id as string).then(setArticleData);
+
+    const savedStyleSettings = localStorage.getItem('reader-settings');
+
+    if (savedStyleSettings) setStyleSettings(JSON.parse(savedStyleSettings));
   }, [id]);
 
   return (
     <div id='wrapper'>
-      <ArticleSettings onChange={setStyleSettings} {...styleSettings} />
+      <div id='article-settings-wrapper'>
+        <ArticleSettings onChange={handleSettingsChange} {...styleSettings} />
+      </div>
       <ArticleViewer article={articleData} {...styleSettings} />
     </div>
   );
