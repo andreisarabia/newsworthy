@@ -85,7 +85,7 @@ export default class Application {
       .use(apiRouter.routes())
       .use(apiRouter.allowedMethods())
       .on('error', (err, ctx) => {
-        err = err instanceof Error ? err.stack || err.message : err;
+        if (err instanceof Error) err = err.stack || err.message;
         console.error(err, ctx.url);
       });
 

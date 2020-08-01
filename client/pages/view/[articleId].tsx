@@ -1,27 +1,46 @@
 import React, { useEffect, useState } from 'react';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
+import styled from 'styled-components';
 import axios from 'axios';
 
 import ArticleSettings from '../../components/ArticleSettings';
 
-import * as colors from '../../constants/colors';
+import { defaultStyleSettings } from '../../constants/reader';
 
 import { SavedArticle, ReaderViewSettings } from '../../typings';
+
+type ArticleViewerProps = { article: SavedArticle | null } & ReaderViewSettings;
 
 const fetchArticleData = async (id: string): Promise<SavedArticle> => {
   const { data } = await axios.get(`/api/article/${id}`);
   return data.article;
 };
 
+const ReaderWrapperDiv = styled.div`
+  #article-settings-wrapper {
+    display: flex;
+    justify-content: center;
+  }
+`;
+
 const ArticleViewer = ({
   article,
   width,
   ...mainStyleProps
-}: { article: SavedArticle | null } & ReaderViewSettings) => {
-  if (article === null) return <p>Fetching article data...</p>;
+}: ArticleViewerProps) => {
+  if (article === null)
+    return (
+      <Head>
+        <title>Getting article...</title>
+      </Head>
+    );
 
   return (
     <main style={{ paddingTop: '4rem', ...mainStyleProps }}>
+      <Head>
+        <title>{`${article.title} - Newsworthy`}</title>
+      </Head>
       <div style={{ margin: 'auto', width }}>
         <h2 style={{ marginTop: '0' }}>{article.title}</h2>
         <h4>{article.description}</h4>
@@ -31,14 +50,6 @@ const ArticleViewer = ({
   );
 };
 
-const defaultStyleSettings = {
-  fontSize: '1.2rem',
-  backgroundColor: colors.WHITE,
-  lineHeight: '1.5',
-  width: '70%',
-  color: colors.BLACK,
-} as ReaderViewSettings;
-
 const ReaderWrapper = () => {
   const [styleSettings, setStyleSettings] = useState(defaultStyleSettings);
   const [articleData, setArticleData] = useState<SavedArticle>(null);
@@ -46,28 +57,28 @@ const ReaderWrapper = () => {
     query: { id },
   } = useRouter();
   const saveSettingsChange = (change: Partial<ReaderViewSettings>) => {
-    setStyleSettings(previousSettings => {
-      const newSettings = { ...previousSettings, ...change };
-      localStorage.setItem('reader-settings', JSON.stringify(newSettings));
-      return newSettings;
-    });
+    const newSettings = { ...styleSettings, ...change };
+    localStorage.setItem('reader-settings', JSON.stringify(newSettings));
+    setStyleSettings(newSettings);
   };
 
   useEffect(() => {
     if (id) fetchArticleData(id as string).then(setArticleData);
+  }, [id]);
 
+  useEffect(() => {
     const savedStyleSettings = localStorage.getItem('reader-settings');
 
     if (savedStyleSettings) setStyleSettings(JSON.parse(savedStyleSettings));
-  }, [id]);
+  }, []);
 
   return (
-    <div id='wrapper'>
+    <ReaderWrapperDiv id='wrapper'>
       <div id='article-settings-wrapper'>
         <ArticleSettings onChange={saveSettingsChange} {...styleSettings} />
       </div>
       <ArticleViewer article={articleData} {...styleSettings} />
-    </div>
+    </ReaderWrapperDiv>
   );
 };
 

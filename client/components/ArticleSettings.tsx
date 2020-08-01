@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import styled from 'styled-components';
 
 import * as colors from '../constants/colors';
@@ -10,21 +11,32 @@ type ArticleSettingsProps = ReaderViewSettings & {
 };
 
 const ArticleSettingsView = styled.div`
-  position: absolute;
+  display: flex;
+  justify-content: space-around;
+  width: 60%;
+  margin: 0.7rem;
+  border-radius: 0.5rem;
+  background: rebeccapurple;
+  position: fixed;
+  opacity: 0;
+  color: white;
 
-  > ul {
-    position: fixed;
+  :hover {
+    opacity: 1;
+  }
+
+  ul {
+    display: flex;
+    align-items: center;
     top: 0;
     right: 0;
-    margin: 3rem;
+    margin: 0;
     line-height: 3;
     padding: unset;
+  }
 
-    > li {
-      display: flex;
-      justify-content: center;
-      margin: 1rem;
-    }
+  #prev-page {
+    font-size: 1.6rem;
   }
 `;
 
@@ -59,6 +71,11 @@ const ArticleSettings = ({
 
   return (
     <ArticleSettingsView>
+      <div id='prev-page'>
+        <Link href='/'>
+          <a>&lt;</a>
+        </Link>
+      </div>
       <ul>
         <li>
           <input
@@ -68,7 +85,7 @@ const ArticleSettings = ({
             min='1'
             max='1.6'
             step='0.1'
-            value={fontSize.slice(0, 3)} // e.g. 1.2 rem
+            defaultValue={fontSize.slice(0, -3)} // e.g. 1.2 rem -> 1.2
             onChange={event =>
               onChange({ fontSize: `${event.target.value}rem` })
             }
@@ -76,6 +93,7 @@ const ArticleSettings = ({
 
           <label htmlFor='font-size'>Aa</label>
         </li>
+
         <li>
           <input
             type='color'
@@ -99,6 +117,7 @@ const ArticleSettings = ({
             readOnly
           />
         </li>
+
         <li>
           <input
             type='range'
@@ -107,12 +126,13 @@ const ArticleSettings = ({
             min='1'
             max='2'
             step='0.25'
-            value={lineHeight}
+            defaultValue={lineHeight}
             onChange={event => onChange({ lineHeight: event.target.value })}
           />
 
           <label htmlFor='line-height'>][</label>
         </li>
+
         <li>
           <input
             type='range'
@@ -121,7 +141,7 @@ const ArticleSettings = ({
             min='50'
             max='80'
             step='10'
-            value={width.slice(0, 2)} // e.g. 70%
+            defaultValue={width.slice(0, 2)} // e.g. 70%
             onChange={event => onChange({ width: `${event.target.value}%` })}
           />
 

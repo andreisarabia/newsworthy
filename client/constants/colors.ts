@@ -1,6 +1,6 @@
 export const WHITE = '#fbfbf7';
 
-export const SEPIA = '#f7e9cd';
+export const SEPIA = '#eee2c9';
 
 export const BLACK = '#1a1a1a';
 
