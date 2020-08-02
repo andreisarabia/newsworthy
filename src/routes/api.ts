@@ -1,5 +1,5 @@
 import Koa from 'koa';
-import KoaRouter from 'koa-router';
+import KoaRouter from '@koa/router';
 
 import SavedArticle from '../models/SavedArticle';
 import Config from '../config';
