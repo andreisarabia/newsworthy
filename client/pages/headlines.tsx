@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Head from 'next/head';
 import axios from 'axios';
 
 import Header from '../components/Header';
@@ -7,8 +8,8 @@ import ApplicationView from '../styles/ApplicationView';
 import { getDomainFromUrl } from '../util/url';
 import { NewsArticleApiData } from '../typings';
 
-const shortenDescription = (str: string, maxLen: number = 135) =>
-  str.length > maxLen ? `${str.slice(0, maxLen)}...` : str;
+const shortenDescription = (desc: string, maxLen: number = 135) =>
+  desc.length > maxLen ? `${desc.slice(0, maxLen)}...` : desc;
 
 const fetchHeadlines = async () => {
   const { data: articles } = await axios.post(
@@ -16,6 +17,45 @@ const fetchHeadlines = async () => {
   );
 
   return articles;
+};
+
+const HeadlinesGrid = ({ articles }: { articles: NewsArticleApiData[] }) => {
+  if (articles.length === 0) return <p>Fetching headlines...</p>;
+
+  return (
+    <main id='saved-articles'>
+      {articles.map(article => (
+        <div key={article.url} className='saved-article'>
+          <div className='article-card'>
+            <a
+              href={article.url}
+              target='_blank'
+              rel='nofollow noopener noreferrer'
+            >
+              <img
+                src={article.urlToImage || ''}
+                alt={article.description}
+                loading='lazy'
+              />
+            </a>
+            <h3>{article.title}</h3>
+            <h4>
+              {article.description ? (
+                shortenDescription(article.description)
+              ) : (
+                <i>No description available</i>
+              )}
+            </h4>
+            <span className='article-meta'>
+              <a href={`https://${getDomainFromUrl(article.url)}`}>
+                {article.source.name || getDomainFromUrl(article.url)}
+              </a>
+            </span>
+          </div>
+        </div>
+      ))}
+    </main>
+  );
 };
 
 const Headlines = () => {
@@ -27,40 +67,12 @@ const Headlines = () => {
 
   return (
     <ApplicationView>
-      <Header />
+      <Head>
+        <title>Headlines - Newsworthy</title>
+      </Head>
 
-      <main id='saved-articles'>
-        {newsHeadlines.map(article => (
-          <div key={article.url} className='saved-article'>
-            <div className='article-card'>
-              <a
-                href={article.url}
-                target='_blank'
-                rel='nofollow noopener noreferrer'
-              >
-                <img
-                  src={article.urlToImage || ''}
-                  alt={article.description}
-                  loading='lazy'
-                />
-              </a>
-              <h3>{article.title}</h3>
-              <h4>
-                {article.description ? (
-                  shortenDescription(article.description)
-                ) : (
-                  <i>No description available</i>
-                )}
-              </h4>
-              <span className='article-meta'>
-                <a href={`https://${getDomainFromUrl(article.url)}`}>
-                  {article.source.name || getDomainFromUrl(article.url)}
-                </a>
-              </span>
-            </div>
-          </div>
-        ))}
-      </main>
+      <Header />
+      <HeadlinesGrid articles={newsHeadlines} />
     </ApplicationView>
   );
 };

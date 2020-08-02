@@ -1,4 +1,4 @@
-export const WHITE = '#fbfbf7';
+export const WHITE = '#e8e8e8';
 
 export const SEPIA = '#eee2c9';
 

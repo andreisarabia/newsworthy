@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import styled from 'styled-components';
 import axios from 'axios';
 
 import ArticleSettings from '../../components/ArticleSettings';
+import ReaderWrapperDiv from '../../styles/ReaderWrapper';
 
 import { defaultStyleSettings } from '../../constants/reader';
+import * as colors from '../../constants/colors';
 
 import { SavedArticle, ReaderViewSettings } from '../../typings';
 
@@ -16,13 +17,6 @@ const fetchArticleData = async (id: string): Promise<SavedArticle> => {
   const { data } = await axios.get(`/api/article/${id}`);
   return data.article;
 };
-
-const ReaderWrapperDiv = styled.div`
-  #article-settings-wrapper {
-    display: flex;
-    justify-content: center;
-  }
-`;
 
 const ArticleViewer = ({
   article,
@@ -36,10 +30,14 @@ const ArticleViewer = ({
       </Head>
     );
 
+  const titleText = `${article.title} - ${
+    article.source.name || article.domain
+  } | Newsworthy`;
+
   return (
     <main style={{ paddingTop: '4rem', ...mainStyleProps }}>
       <Head>
-        <title>{`${article.title} - Newsworthy`}</title>
+        <title>{titleText}</title>
       </Head>
       <div style={{ margin: 'auto', width }}>
         <h2 style={{ marginTop: '0' }}>{article.title}</h2>
@@ -57,9 +55,25 @@ const ReaderWrapper = () => {
     query: { id },
   } = useRouter();
   const saveSettingsChange = (change: Partial<ReaderViewSettings>) => {
-    const newSettings = { ...styleSettings, ...change };
-    localStorage.setItem('reader-settings', JSON.stringify(newSettings));
-    setStyleSettings(newSettings);
+    if (change.backgroundColor === styleSettings.backgroundColor) {
+      change = { ...styleSettings, ...change };
+    } else {
+      let color: string = styleSettings.color;
+
+      switch (change.backgroundColor) {
+        case colors.WHITE:
+        case colors.SEPIA:
+          color = colors.BLACK;
+          break;
+        case colors.BLACK:
+          color = colors.WHEAT;
+          break;
+      }
+
+      change = { ...styleSettings, ...change, color };
+    }
+    setStyleSettings(change as ReaderViewSettings);
+    localStorage.setItem('reader-settings', JSON.stringify(change));
   };
 
   useEffect(() => {
@@ -68,7 +82,6 @@ const ReaderWrapper = () => {
 
   useEffect(() => {
     const savedStyleSettings = localStorage.getItem('reader-settings');
-
     if (savedStyleSettings) setStyleSettings(JSON.parse(savedStyleSettings));
   }, []);
 

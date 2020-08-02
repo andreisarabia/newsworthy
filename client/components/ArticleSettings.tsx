@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import styled from 'styled-components';
 
+import ArticleSettingsView from '../styles/ArticleSettingsView';
 import * as colors from '../constants/colors';
 
 import { ReaderViewSettings } from '../typings';
@@ -10,42 +10,26 @@ type ArticleSettingsProps = ReaderViewSettings & {
   onChange: (change: Partial<ReaderViewSettings>) => void;
 };
 
-const ArticleSettingsView = styled.div`
-  display: flex;
-  justify-content: space-around;
-  width: 60%;
-  margin: 0.7rem;
-  border-radius: 0.5rem;
-  background: rebeccapurple;
-  position: fixed;
-  opacity: 0;
-  color: white;
-
-  :hover {
-    opacity: 1;
+const getColorStyles = (background: string) => {
+  switch (background) {
+    case colors.BLACK:
+      return { color: colors.WHEAT };
+    default:
+      return { color: colors.BLACK };
   }
-
-  ul {
-    display: flex;
-    align-items: center;
-    top: 0;
-    right: 0;
-    margin: 0;
-    line-height: 3;
-    padding: unset;
-  }
-
-  #prev-page {
-    font-size: 1.6rem;
-  }
-`;
+};
 
 const ArticleSettings = ({
   onChange,
   fontSize,
   lineHeight,
   width,
+  backgroundColor,
 }: ArticleSettingsProps) => {
+  const [settingsStyle, setSettingsStyle] = useState(
+    getColorStyles(backgroundColor)
+  );
+
   const handleBackgroundColorClick = (
     event: React.MouseEvent<HTMLInputElement, MouseEvent>
   ) => {
@@ -53,24 +37,16 @@ const ArticleSettings = ({
 
     const backgroundColor = (event.target as HTMLInputElement).value;
 
-    let fontColor: string;
-
-    switch (backgroundColor) {
-      case colors.BLACK:
-        fontColor = colors.WHEAT;
-        break;
-      case colors.WHITE:
-      case colors.SEPIA:
-      default:
-        fontColor = colors.BLACK;
-        break;
-    }
-
-    onChange({ backgroundColor, color: fontColor });
+    onChange({ backgroundColor });
+    setSettingsStyle(getColorStyles(backgroundColor));
   };
 
+  useEffect(() => {
+    setSettingsStyle(getColorStyles(backgroundColor));
+  }, [backgroundColor]);
+
   return (
-    <ArticleSettingsView>
+    <ArticleSettingsView style={settingsStyle}>
       <div id='prev-page'>
         <Link href='/'>
           <a>&lt;</a>
@@ -78,6 +54,7 @@ const ArticleSettings = ({
       </div>
       <ul>
         <li>
+          <label htmlFor='font-size'>Aa</label>
           <input
             type='range'
             name='font-size'
@@ -90,11 +67,9 @@ const ArticleSettings = ({
               onChange({ fontSize: `${event.target.value}rem` })
             }
           />
-
-          <label htmlFor='font-size'>Aa</label>
         </li>
 
-        <li>
+        <li id='background-list-option'>
           <input
             type='color'
             value={colors.WHITE}
@@ -119,6 +94,8 @@ const ArticleSettings = ({
         </li>
 
         <li>
+          <label htmlFor='line-height'>][</label>
+
           <input
             type='range'
             name='line-height'
@@ -129,11 +106,11 @@ const ArticleSettings = ({
             defaultValue={lineHeight}
             onChange={event => onChange({ lineHeight: event.target.value })}
           />
-
-          <label htmlFor='line-height'>][</label>
         </li>
 
         <li>
+          <label htmlFor='content-width'>[&lt;----&gt;]</label>
+
           <input
             type='range'
             name='content-width'
@@ -144,8 +121,6 @@ const ArticleSettings = ({
             defaultValue={width.slice(0, 2)} // e.g. 70%
             onChange={event => onChange({ width: `${event.target.value}%` })}
           />
-
-          <label htmlFor='content-width'>&lt;~&gt;</label>
         </li>
       </ul>
     </ArticleSettingsView>
