@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import Head from 'next/head';
 import styled from 'styled-components';
 import axios from 'axios';
 
@@ -6,52 +7,49 @@ import Header from '../components/Header';
 import App from '../components/App';
 import Sidebar from '../components/Sidebar';
 
-import { SavedArticle, SavedArticleState } from '../typings';
+import { SavedArticle } from '../typings';
 
 const AppContainer = styled.div`
   display: flex;
 `;
 
-const sortByDate = (a: Date, b: Date) => b.getTime() - a.getTime();
+const getArticles = async (): Promise<SavedArticle[]> => {
+  const {
+    data: { articles },
+  } = await axios.get(`${window.location.origin}/api/article/list`);
 
-export default class Home extends React.Component<{}, SavedArticleState> {
-  state = {
-    list: [],
-  };
+  return (articles as SavedArticle[]).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+};
 
-  async componentDidMount() {
-    const {
-      data: { articles },
-    } = await axios.get(`${window.location.origin}/api/article/list`);
+const Home = () => {
+  const [articles, setArticles] = useState<SavedArticle[]>([]);
 
-    (articles as SavedArticle[]).sort((a, b) =>
-      sortByDate(new Date(a.createdAt), new Date(b.createdAt))
-    );
+  useEffect(() => {
+    getArticles().then(setArticles);
+  }, []);
 
-    this.setState({ list: articles });
-  }
+  return (
+    <>
+      <Head>
+        <title>Newsworthy - Save news for later</title>
+      </Head>
+      <Header
+        onAddLink={async url => {
+          const {
+            data: { article },
+          } = await axios.post('/api/article/save', { url });
 
-  async addToList(url: string): Promise<void> {
-    try {
-      const {
-        data: { article },
-      } = await axios.post('/api/article/save', { url });
+          setArticles([article, ...articles]);
+        }}
+      />
+      <AppContainer id='app-container'>
+        <Sidebar />
+        <App articles={articles} />
+      </AppContainer>
+    </>
+  );
+};
 
-      this.setState(state => ({ list: [article, ...state.list] }));
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  render() {
-    return (
-      <>
-        <Header onAddLink={link => this.addToList(link)} />
-        <AppContainer id='app-container'>
-          <Sidebar />
-          <App list={this.state.list} />
-        </AppContainer>
-      </>
-    );
-  }
-}
+export default Home;

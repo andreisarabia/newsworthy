@@ -20,12 +20,6 @@ export interface SavedArticle {
   };
 }
 
-export interface SavedArticleProps {
-  list: SavedArticle[];
-}
-
-export interface SavedArticleState extends SavedArticleProps {}
-
 export interface NewsArticleApiData {
   source: {
     id: string | null;
@@ -40,3 +34,11 @@ export interface NewsArticleApiData {
   content: string | null;
   wordCount: number;
 }
+
+export type ReaderViewSettings = {
+  fontSize: string;
+  color?: string;
+  backgroundColor: string;
+  lineHeight: string;
+  width: string;
+};

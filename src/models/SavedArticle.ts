@@ -142,7 +142,10 @@ export default class SavedArticle extends Model<types.NewsArticleProps> {
 
   public static async dropCollection(): Promise<boolean> {
     try {
-      const findOpts = { limit: 0, projection: { domain: 1, urlToImage: 1 } };
+      const findOpts = {
+        limit: 0,
+        projection: { _id: 0, domain: 1, urlToImage: 1 },
+      };
       // flat map here to prevent looping twice to get rid of `null` image ids
       const imageIds = (await this.findAll({}, findOpts)).flatMap(
         article => article.cloudinaryImageId || []

@@ -7,7 +7,7 @@ export const parallelize = async <T>(
   numChunks: number,
   fn: (chunk: T) => Promise<void>
 ): Promise<void> => {
-  numChunks = numChunks > chunks.length ? chunks.length : numChunks;
+  if (numChunks > chunks.length) numChunks = chunks.length;
 
   for (let i = 0; i < chunks.length; i += numChunks)
     await Promise.all(chunks.slice(i, i + numChunks).map(fn));
